@@ -1,0 +1,2490 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Biddaloy Management — বিদ্যালয় ম্যানেজমেন্ট সিস্টেম</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Hind Siliguri & Noto Sans Bengali -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gpsGreen: '#006a4e',
+            gpsDark: '#004d38',
+            gpsLight: '#ecfdf5',
+            gpsRed: '#f42a41',
+            goldBadge: '#d97706'
+          },
+          fontFamily: {
+            sans: ['"Hind Siliguri"', '"Noto Sans Bengali"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+      background-color: #f4f7f6;
+      color: #1e293b;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #006a4e; border-radius: 9999px; }
+
+    /* Print / PDF Dedicated Styling */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 10mm;
+      }
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt !important;
+      }
+      .no-print, header, aside, nav, .mobile-bottom-nav, #toastBox, #modalOverlay, #authScreen {
+        display: none !important;
+      }
+      main {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      .print-container {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+      }
+      .print-card-avoid-break {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .print-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+      }
+      .print-table th, .print-table td {
+        border: 1px solid #334155 !important;
+        padding: 5px 7px !important;
+        color: #000 !important;
+      }
+      .print-table thead th {
+        background-color: #e2e8f0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .certificate-frame {
+        border: 4px double #006a4e !important;
+        padding: 16mm !important;
+        min-height: 262mm !important;
+        box-sizing: border-box;
+      }
+    }
+
+    .certificate-frame {
+      border: 4px double #006a4e;
+      background: #ffffff;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Full-Screen Login & New Institution Registration Overlay -->
+  <div id="authScreen" class="no-print fixed inset-0 z-50 bg-gradient-to-br from-gpsDark via-gpsGreen to-emerald-900 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-emerald-200 overflow-hidden my-auto">
+      <!-- Auth Top Brand -->
+      <div class="bg-gpsLight p-6 text-center border-b border-emerald-100">
+        <div id="authLogoBox" class="w-16 h-16 rounded-2xl bg-gpsGreen text-white flex items-center justify-center text-3xl mx-auto mb-3 shadow-md overflow-hidden">
+          <i class="fa-solid fa-school"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gpsGreen tracking-tight">Biddaloy Management</h2>
+        <p class="text-xs font-semibold text-slate-600 mt-0.5">বিদ্যালয় ম্যানেজমেন্ট সিস্টেম — অফলাইন ও ডিজিটাল সমাধান</p>
+        <p id="authSchoolTitle" class="text-xs font-bold text-emerald-800 mt-1.5 px-3 py-1 rounded-full bg-white/80 inline-block border border-emerald-200">সিন্দুরনা সরকারি প্রাথমিক বিদ্যালয়</p>
+
+        <!-- Auth Tabs -->
+        <div class="grid grid-cols-2 gap-1.5 bg-emerald-100/80 p-1 rounded-xl mt-4 text-xs font-bold">
+          <button type="button" id="tabBtnLogin" onclick="switchAuthTab('login')" class="py-2 rounded-lg bg-gpsGreen text-white shadow-2xs transition">লগইন করুন</button>
+          <button type="button" id="tabBtnRegister" onclick="switchAuthTab('register')" class="py-2 rounded-lg text-gpsGreen hover:bg-white/60 transition">নতুন প্রতিষ্ঠান সেটআপ</button>
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="p-6 space-y-4 text-sm">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">ইউজারনেম বা মোবাইল নম্বর</label>
+          <div class="relative">
+            <i class="fa-solid fa-user absolute left-3.5 top-3 text-slate-400"></i>
+            <input type="text" id="loginUser" required placeholder="admin" class="w-full pl-10 pr-3.5 py-2.5 border border-slate-300 rounded-xl focus:border-gpsGreen focus:outline-none" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">পাসওয়ার্ড</label>
+          <div class="relative">
+            <i class="fa-solid fa-lock absolute left-3.5 top-3 text-slate-400"></i>
+            <input type="password" id="loginPass" required placeholder="••••" class="w-full pl-10 pr-10 py-2.5 border border-slate-300 rounded-xl focus:border-gpsGreen focus:outline-none" />
+            <button type="button" onclick="togglePassVisibility('loginPass')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600" title="পাসওয়ার্ড দেখুন/লুকান">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <p id="loginErrorMsg" class="text-xs text-rose-600 font-semibold hidden"></p>
+
+        <button type="submit" class="w-full py-3 rounded-xl bg-gpsGreen hover:bg-gpsDark text-white font-bold shadow-md transition">
+          <i class="fa-solid fa-right-to-bracket mr-1.5"></i> প্রবেশ করুন (Login)
+        </button>
+
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+          <span class="text-slate-500">ডিফল্ট: <strong>admin</strong> / <strong>1234</strong></span>
+          <button type="button" onclick="fillDemoLogin()" class="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold transition">
+            এক ক্লিকে ডেমো লগইন
+          </button>
+        </div>
+      </form>
+
+      <!-- New Institution Quick Setup Form -->
+      <form id="registerForm" onsubmit="handleRegisterSubmit(event)" class="p-6 space-y-3 text-sm hidden">
+        <div class="text-center pb-1">
+          <h3 class="text-sm font-bold text-gpsGreen">Biddaloy Management — নতুন প্রতিষ্ঠান সেটআপ</h3>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">প্রতিষ্ঠানের ধরন</label>
+          <select name="instType" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 font-semibold">
+            <option value="সরকারি প্রাথমিক বিদ্যালয়">সরকারি প্রাথমিক বিদ্যালয়</option>
+            <option value="কিন্ডারগার্টেন">কিন্ডারগার্টেন</option>
+            <option value="মাদ্রাসা">মাদ্রাসা</option>
+            <option value="উচ্চ বিদ্যালয়">উচ্চ বিদ্যালয়</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">প্রতিষ্ঠানের নাম (বাংলায়)</label>
+          <input type="text" name="schoolName" required placeholder="যেমন: আদর্শ সরকারি প্রাথমিক বিদ্যালয় / কিন্ডারগার্টেন" class="w-full px-3 py-2 border border-slate-300 rounded-xl" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">প্রতিষ্ঠানের নাম (ইংরেজিতে - ঐচ্ছিক)</label>
+          <input type="text" name="schoolNameEn" placeholder="e.g. Adarsha Govt. Primary School" class="w-full px-3 py-2 border border-slate-300 rounded-xl" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">ঠিকানা (উপজেলা ও জেলা)</label>
+          <input type="text" name="address" required placeholder="যেমন: সদর, রংপুর" class="w-full px-3 py-2 border border-slate-300 rounded-xl" />
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">নতুন ইউজারনেম</label>
+            <input type="text" name="username" required placeholder="admin" class="w-full px-3 py-2 border border-slate-300 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">নতুন পাসওয়ার্ড</label>
+            <input type="text" name="password" required placeholder="1234" class="w-full px-3 py-2 border border-slate-300 rounded-xl" />
+          </div>
+        </div>
+        <label class="flex items-center gap-2 text-xs text-slate-600 pt-1 cursor-pointer">
+          <input type="checkbox" name="clearDemo" class="rounded text-gpsGreen" />
+          <span>ডেমো শিক্ষার্থী/শিক্ষক বাদ দিয়ে একদম খালি হিসেবে শুরু করুন</span>
+        </label>
+        <button type="submit" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold shadow-md transition">
+          <i class="fa-solid fa-check-circle mr-1"></i> সেটআপ সম্পন্ন ও প্রবেশ করুন
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Top Header -->
+  <header class="no-print sticky top-0 z-40 bg-gpsGreen text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-xl bg-gpsDark hover:bg-emerald-900 text-white transition" aria-label="মেনু খুলুন">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <div onclick="navigateTo('dashboard')" class="cursor-pointer flex items-center gap-3">
+          <div id="headerLogoBox" class="w-10 h-10 rounded-xl bg-white text-gpsGreen flex items-center justify-center font-bold text-xl shadow-xs overflow-hidden shrink-0">
+            <i class="fa-solid fa-school"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-base sm:text-lg font-bold tracking-wide leading-none">Biddaloy Management</h1>
+              <span class="hidden md:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-900 text-emerald-200 border border-emerald-500/40">অফলাইন</span>
+            </div>
+            <p id="headerSchoolName" class="text-xs text-emerald-100 mt-0.5 truncate max-w-[185px] sm:max-w-md">সিন্দুরনা সরকারি প্রাথমিক বিদ্যালয়</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="navigateTo('attendance')" class="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/20 transition">
+          <i class="fa-solid fa-clipboard-user text-amber-300"></i>
+          <span>আজকের হাজিরা</span>
+        </button>
+        <button onclick="navigateTo('settings')" class="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold flex items-center gap-1.5 shadow-xs transition">
+          <i class="fa-solid fa-gear"></i>
+          <span class="hidden sm:inline">সেটআপ</span>
+        </button>
+        <button onclick="logoutApp()" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition" title="লগআউট করুন">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span class="hidden md:inline">লগআউট</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Shell -->
+  <div class="flex-1 max-w-7xl w-full mx-auto flex relative">
+
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="sidebarBackdrop" onclick="toggleSidebar()" class="no-print fixed inset-0 bg-black/50 z-40 hidden lg:hidden backdrop-blur-xs"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="no-print fixed lg:sticky top-0 lg:top-[64px] left-0 z-50 lg:z-30 h-full lg:h-[calc(100vh-64px)] w-72 bg-white border-r border-slate-200 shadow-xl lg:shadow-none transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
+      <div class="p-4 bg-gpsLight border-b border-emerald-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="font-bold text-gpsGreen text-base block leading-tight">Biddaloy Management</span>
+            <span class="text-[11px] text-slate-600">বিদ্যালয় ম্যানেজমেন্ট সিস্টেম</span>
+          </div>
+          <button onclick="toggleSidebar()" class="lg:hidden p-1.5 rounded-lg text-slate-600 hover:bg-emerald-100">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <nav id="sidebarNav" class="flex-1 overflow-y-auto p-3 space-y-1">
+        <!-- Rendered by JS -->
+      </nav>
+
+      <div class="p-3 border-t border-slate-100 bg-slate-50 space-y-2">
+        <button onclick="logoutApp()" class="w-full py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-lock"></i> লগআউট (Logout)
+        </button>
+        <p class="text-[10px] text-center text-gpsGreen font-semibold">Biddaloy Management • অফলাইন ও ডিজিটাল সমাধান</p>
+      </div>
+    </aside>
+
+    <!-- Main Dynamic Content -->
+    <main id="mainContent" class="flex-1 p-4 sm:p-6 pb-24 lg:pb-10 min-w-0">
+      <!-- Rendered by JS -->
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="no-print mobile-bottom-nav lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] px-1 py-1.5 flex justify-around items-center">
+    <button onclick="navigateTo('dashboard')" id="mnav-dashboard" class="flex flex-col items-center p-1.5 rounded-xl text-gpsGreen font-bold text-[11px]">
+      <i class="fa-solid fa-house text-base mb-0.5"></i>
+      <span>ড্যাশবোর্ড</span>
+    </button>
+    <button onclick="navigateTo('attendance')" id="mnav-attendance" class="flex flex-col items-center p-1.5 rounded-xl text-slate-500 text-[11px]">
+      <i class="fa-solid fa-clipboard-check text-base mb-0.5"></i>
+      <span>হাজিরা</span>
+    </button>
+    <button onclick="navigateTo('results')" id="mnav-results" class="flex flex-col items-center p-1.5 rounded-xl text-slate-500 text-[11px]">
+      <i class="fa-solid fa-square-poll-vertical text-base mb-0.5"></i>
+      <span>ফলাফল</span>
+    </button>
+    <button onclick="navigateTo('documents')" id="mnav-documents" class="flex flex-col items-center p-1.5 rounded-xl text-slate-500 text-[11px]">
+      <i class="fa-solid fa-id-card text-base mb-0.5"></i>
+      <span>কার্ড ও সনদ</span>
+    </button>
+    <button onclick="toggleSidebar()" class="flex flex-col items-center p-1.5 rounded-xl text-slate-500 text-[11px]">
+      <i class="fa-solid fa-bars text-base mb-0.5"></i>
+      <span>সব মেনু</span>
+    </button>
+  </nav>
+
+  <!-- Modal Container -->
+  <div id="modalOverlay" class="no-print fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4 backdrop-blur-xs">
+    <div id="modalBox" class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 p-5 sm:p-6">
+      <!-- Dynamic Modal Content -->
+    </div>
+  </div>
+
+  <!-- Toast Box -->
+  <div id="toastBox" class="no-print fixed bottom-20 lg:bottom-6 right-4 left-4 sm:left-auto sm:w-80 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl border border-emerald-500/40 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3">
+    <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+    <span id="toastMsg" class="text-sm font-medium"></span>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. BENGALI NUMBER & HELPER UTILITIES
+    // ==========================================
+    const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    function toBn(val) {
+      if (val === null || val === undefined) return '';
+      return String(val).replace(/\d/g, d => bnDigits[d]);
+    }
+
+    function getTodayISO() {
+      const d = new Date();
+      return d.toISOString().split('T')[0];
+    }
+
+    function formatDateBn(isoDate) {
+      if (!isoDate) return '';
+      const parts = isoDate.split('-');
+      if (parts.length !== 3) return toBn(isoDate);
+      return `${toBn(parts[2])}/${toBn(parts[1])}/${toBn(parts[0])}`;
+    }
+
+    // Image Compression & Base64 Converter
+    function processImageFile(file, callback) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxSize = 260;
+          let w = img.width;
+          let h = img.height;
+          if (w > h) {
+            if (w > maxSize) { h *= maxSize / w; w = maxSize; }
+          } else {
+            if (h > maxSize) { w *= maxSize / h; h = maxSize; }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          callback(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Dynamic Classes & Subjects (100% Editable per Institution)
+    const defaultClasses = [
+      { id: '1', name: '১ম শ্রেণি' },
+      { id: '2', name: '২য় শ্রেণি' },
+      { id: '3', name: '৩য় শ্রেণি' },
+      { id: '4', name: '৪র্থ শ্রেণি' },
+      { id: '5', name: '৫ম শ্রেণি' }
+    ];
+
+    const defaultSubjects = [
+      { key: 'bangla', name: 'বাংলা', fullMarks: 100 },
+      { key: 'english', name: 'ইংরেজি', fullMarks: 100 },
+      { key: 'math', name: 'গণিত', fullMarks: 100 },
+      { key: 'science', name: 'প্রাথমিক বিজ্ঞান', fullMarks: 100 },
+      { key: 'bgs', name: 'বাংলাদেশ ও বিশ্বপরিচয়', fullMarks: 100 },
+      { key: 'religion', name: 'ধর্ম ও নৈতিক শিক্ষা', fullMarks: 100 }
+    ];
+
+    function getClassName(clsId) {
+      const list = appData?.classes || defaultClasses;
+      const found = list.find(c => String(c.id) === String(clsId));
+      return found ? found.name : `${toBn(clsId)}ম শ্রেণি`;
+    }
+
+    function getClassesMap() {
+      const list = appData?.classes || defaultClasses;
+      const map = {};
+      list.forEach(c => { map[c.id] = c.name; });
+      return map;
+    }
+
+    function getSubjectsList() {
+      const list = (appData?.subjects && appData.subjects.length > 0) ? appData.subjects : defaultSubjects;
+      return list.map(s => ({ ...s, fullMarks: Number(s.fullMarks) || 100 }));
+    }
+
+    // ==========================================
+    // 2. INITIAL DEFAULT DATA (PRE-LOADED)
+    // ==========================================
+    const defaultData = {
+      auth: {
+        username: 'admin',
+        password: '1234'
+      },
+      classes: JSON.parse(JSON.stringify(defaultClasses)),
+      subjects: JSON.parse(JSON.stringify(defaultSubjects)),
+      school: {
+        instType: 'সরকারি প্রাথমিক বিদ্যালয়',
+        name: 'সিন্দুরনা সরকারি প্রাথমিক বিদ্যালয়',
+        nameEn: 'Sindurna Government Primary School',
+        address: 'ডাকঘর: সিন্দুরনা, উপজেলা: হাতীবান্ধা, জেলা: লালমনিরহাট',
+        emis: '৯০৫০২০৪০৩',
+        estd: '১৯৭৩',
+        headTeacher: 'মোঃ আবুল কালাম আজাদ',
+        headDesignation: 'প্রধান শিক্ষক',
+        phone: '01712-000000',
+        session: '২০২৬',
+        logo: '',
+        signature: ''
+      },
+      students: [
+        { id: 's1', roll: 1, class: '5', name: 'তানভীর আহমেদ', nameEn: 'Tanvir Ahmed', father: 'মোঃ রফিকুল ইসলাম', mother: 'মোছাঃ শিরিন আক্তার', gender: 'ছাত্র', phone: '01711-223344', blood: 'B+', dob: '2015-03-12', photo: '' },
+        { id: 's2', roll: 2, class: '5', name: 'নুসরাত জাহান মীম', nameEn: 'Nusrat Jahan Mim', father: 'মোঃ সাইফুল ইসলাম', mother: 'মোছাঃ ফাতেমা বেগম', gender: 'ছাত্রী', phone: '01812-334455', blood: 'O+', dob: '2015-06-20', photo: '' },
+        { id: 's3', roll: 3, class: '5', name: 'সাদিয়া সুলতানা', nameEn: 'Sadia Sultana', father: 'মোঃ আব্দুল করিম', mother: 'মোছাঃ আয়েশা সিদ্দিকা', gender: 'ছাত্রী', phone: '01913-445566', blood: 'A+', dob: '2015-08-15', photo: '' },
+        { id: 's4', roll: 4, class: '5', name: 'রাফি হাসান', nameEn: 'Rafi Hasan', father: 'মোঃ জাহাঙ্গীর আলম', mother: 'মোছাঃ রোকেয়া খাতুন', gender: 'ছাত্র', phone: '01614-556677', blood: 'AB+', dob: '2015-01-10', photo: '' },
+        { id: 's5', roll: 1, class: '4', name: 'সুমাইয়া আক্তার', nameEn: 'Sumaiya Akter', father: 'মোঃ মিজানুর রহমান', mother: 'মোছাঃ নাজমা বেগম', gender: 'ছাত্রী', phone: '01715-667788', blood: 'O+', dob: '2016-04-18', photo: '' },
+        { id: 's6', roll: 2, class: '4', name: 'আব্দুল্লাহ আল মামুন', nameEn: 'Abdullah Al Mamun', father: 'মোঃ শফিকুল ইসলাম', mother: 'মোছাঃ সালমা আক্তার', gender: 'ছাত্র', phone: '01716-778899', blood: 'B+', dob: '2016-09-25', photo: '' },
+        { id: 's7', roll: 1, class: '3', name: 'জান্নাতুল ফেরদৌস', nameEn: 'Jannatul Ferdous', father: 'মোঃ হারুন অর রশিদ', mother: 'মোছাঃ মনোয়ারা বেগম', gender: 'ছাত্রী', phone: '01717-889900', blood: 'A+', dob: '2017-02-14', photo: '' },
+        { id: 's8', roll: 2, class: '3', name: 'মেহেদী হাসান', nameEn: 'Mehedi Hasan', father: 'মোঃ নজরুল ইসলাম', mother: 'মোছাঃ খাদিজা খাতুন', gender: 'ছাত্র', phone: '01718-990011', blood: 'O-', dob: '2017-11-05', photo: '' },
+        { id: 's9', roll: 1, class: '2', name: 'আরিফা তাবাসসুম', nameEn: 'Arifa Tabassum', father: 'মোঃ কামরুল হাসান', mother: 'মোছাঃ তাসলিমা আক্তার', gender: 'ছাত্রী', phone: '01719-112233', blood: 'B+', dob: '2018-05-09', photo: '' },
+        { id: 's10', roll: 1, class: '1', name: 'ইব্রাহিম খলিল', nameEn: 'Ibrahim Khalil', father: 'মোঃ লুৎফর রহমান', mother: 'মোছাঃ আমেনা বেগম', gender: 'ছাত্র', phone: '01720-223344', blood: 'O+', dob: '2019-07-22', photo: '' }
+      ],
+      teachers: [
+        { id: 't1', name: 'মোঃ আবুল কালাম আজাদ', nameEn: 'Md. Abul Kalam Azad', designation: 'প্রধান শিক্ষক', phone: '01712-100200', qualification: 'এম.এ, বি.এড, সি-ইন-এড', joining: '2008-02-15', photo: '' },
+        { id: 't2', name: 'মোঃ নাজিমুল হক', nameEn: 'Md. Nazimul Haque', designation: 'সহকারী শিক্ষক', phone: '01356-520783', qualification: 'বি.এস.সি (অনার্স), ডিপিএড', joining: '2016-07-01', photo: '' },
+        { id: 't3', name: 'মোছাঃ ফারজানা ইয়াসমিন', nameEn: 'Mst. Farzana Yasmin', designation: 'সহকারী শিক্ষক', phone: '01714-300400', qualification: 'এম.এস.এস, ডিপিএড', joining: '2014-03-10', photo: '' },
+        { id: 't4', name: 'মোঃ মাহবুবুর রহমান', nameEn: 'Md. Mahbubur Rahman', designation: 'সহকারী শিক্ষক', phone: '01715-500600', qualification: 'বি.এ, বি.টি.পি.টি', joining: '2019-01-20', photo: '' }
+      ],
+      attendance: {},
+      results: {
+        'বার্ষিক পরীক্ষা': {
+          's1': { bangla: 86, english: 82, math: 94, science: 88, bgs: 85, religion: 92 },
+          's2': { bangla: 91, english: 88, math: 90, science: 89, bgs: 92, religion: 95 },
+          's3': { bangla: 78, english: 74, math: 81, science: 76, bgs: 80, religion: 85 },
+          's4': { bangla: 68, english: 65, math: 72, science: 70, bgs: 69, religion: 78 }
+        }
+      },
+      routine: [
+        { id: 'r1', date: '2026-12-01', day: 'মঙ্গলবার', time: 'সকাল ১০:০০ - ১২:৩০', className: 'সকল শ্রেণি (১ম - ৫ম)', subject: 'বাংলা' },
+        { id: 'r2', date: '2026-12-02', day: 'বুধবার', time: 'সকাল ১০:০০ - ১২:৩০', className: 'সকল শ্রেণি (১ম - ৫ম)', subject: 'ইংরেজি' },
+        { id: 'r3', date: '2026-12-03', day: 'বৃহস্পতিবার', time: 'সকাল ১০:০০ - ১২:৩০', className: 'সকল শ্রেণি (১ম - ৫ম)', subject: 'গণিত' },
+        { id: 'r4', date: '2026-12-06', day: 'রবিবার', time: 'সকাল ১০:০০ - ১২:৩০', className: '৩য় - ৫ম শ্রেণি', subject: 'প্রাথমিক বিজ্ঞান' },
+        { id: 'r5', date: '2026-12-07', day: 'সোমবার', time: 'সকাল ১০:০০ - ১২:৩০', className: '৩য় - ৫ম শ্রেণি', subject: 'বাংলাদেশ ও বিশ্বপরিচয়' },
+        { id: 'r6', date: '2026-12-08', day: 'মঙ্গলবার', time: 'সকাল ১০:০০ - ১২:৩০', className: 'সকল শ্রেণি (১ম - ৫ম)', subject: 'ধর্ম ও নৈতিক শিক্ষা' }
+      ],
+      dutyRoster: [
+        { id: 'd1', date: '2026-12-01', room: 'কক্ষ নং - ০১ (১ম ও ২য় শ্রেণি)', teacher: 'মোছাঃ ফারজানা ইয়াসমিন' },
+        { id: 'd2', date: '2026-12-01', room: 'কক্ষ নং - ০২ (৩য় ও ৪র্থ শ্রেণি)', teacher: 'মোঃ মাহবুবুর রহমান' },
+        { id: 'd3', date: '2026-12-01', room: 'কক্ষ নং - ০৩ (৫ম শ্রেণি)', teacher: 'মোঃ নাজিমুল হক' }
+      ]
+    };
+
+    // Load or Initialize State
+    let appData = JSON.parse(localStorage.getItem('biddaloy_mgmt_data_v1') || localStorage.getItem('easygps_data_v1') || 'null');
+    if (!appData) {
+      appData = JSON.parse(JSON.stringify(defaultData));
+      const today = getTodayISO();
+      appData.attendance[today] = {};
+      appData.students.forEach((st, idx) => {
+        appData.attendance[today][st.id] = idx === 2 ? 'A' : 'P';
+      });
+      saveData();
+    } else {
+      if (!appData.auth) appData.auth = { username: 'admin', password: '1234' };
+      if (!appData.classes) appData.classes = JSON.parse(JSON.stringify(defaultClasses));
+      if (!appData.subjects) appData.subjects = JSON.parse(JSON.stringify(defaultSubjects));
+      if (!appData.school.instType) appData.school.instType = 'সরকারি প্রাথমিক বিদ্যালয়';
+      if (!appData.school.headDesignation) appData.school.headDesignation = 'প্রধান শিক্ষক';
+      if (appData.school.signature === undefined) appData.school.signature = '';
+    }
+
+    function saveData() {
+      localStorage.setItem('biddaloy_mgmt_data_v1', JSON.stringify(appData));
+      updateHeaderSchoolInfo();
+    }
+
+    // ==========================================
+    // AUTHENTICATION (LOGIN, REGISTER & LOGOUT)
+    // ==========================================
+    let isLoggedIn = sessionStorage.getItem('biddaloy_logged_in') === 'true';
+
+    function checkAuthState() {
+      const authEl = document.getElementById('authScreen');
+      const titleEl = document.getElementById('authSchoolTitle');
+      const logoEl = document.getElementById('authLogoBox');
+      if (titleEl) titleEl.textContent = appData.school.name || 'Biddaloy Management';
+      if (logoEl && appData.school.logo) {
+        logoEl.innerHTML = `<img src="${appData.school.logo}" class="w-full h-full object-cover" />`;
+      }
+      if (!authEl) return;
+      if (isLoggedIn) {
+        authEl.classList.add('hidden');
+      } else {
+        authEl.classList.remove('hidden');
+      }
+    }
+
+    function switchAuthTab(tab) {
+      const loginForm = document.getElementById('loginForm');
+      const regForm = document.getElementById('registerForm');
+      const btnL = document.getElementById('tabBtnLogin');
+      const btnR = document.getElementById('tabBtnRegister');
+      if (tab === 'login') {
+        loginForm.classList.remove('hidden');
+        regForm.classList.add('hidden');
+        btnL.className = 'py-2 rounded-lg bg-gpsGreen text-white shadow-2xs transition';
+        btnR.className = 'py-2 rounded-lg text-gpsGreen hover:bg-white/60 transition';
+      } else {
+        loginForm.classList.add('hidden');
+        regForm.classList.remove('hidden');
+        btnR.className = 'py-2 rounded-lg bg-gpsGreen text-white shadow-2xs transition';
+        btnL.className = 'py-2 rounded-lg text-gpsGreen hover:bg-white/60 transition';
+      }
+    }
+
+    function togglePassVisibility(inputId) {
+      const inp = document.getElementById(inputId);
+      if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    function fillDemoLogin() {
+      document.getElementById('loginUser').value = appData.auth.username || 'admin';
+      document.getElementById('loginPass').value = appData.auth.password || '1234';
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value.trim();
+      const errEl = document.getElementById('loginErrorMsg');
+
+      if ((u === appData.auth.username || u === appData.school.phone) && p === appData.auth.password) {
+        isLoggedIn = true;
+        sessionStorage.setItem('biddaloy_logged_in', 'true');
+        errEl.classList.add('hidden');
+        checkAuthState();
+        showToast(`Biddaloy Management-এ স্বাগতম!`);
+        renderMain();
+      } else {
+        errEl.textContent = 'ভুল ইউজারনেম অথবা পাসওয়ার্ড! অনুগ্রহ করে সঠিক তথ্য দিন।';
+        errEl.classList.remove('hidden');
+      }
+    }
+
+    function handleRegisterSubmit(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      appData.school.instType = fd.get('instType');
+      appData.school.name = fd.get('schoolName').trim();
+      appData.school.nameEn = (fd.get('schoolNameEn') || '').trim();
+      appData.school.address = fd.get('address').trim();
+      appData.auth.username = fd.get('username').trim();
+      appData.auth.password = fd.get('password').trim();
+
+      if (fd.get('clearDemo')) {
+        appData.students = [];
+        appData.teachers = [];
+        appData.attendance = {};
+        appData.results = {};
+      }
+      saveData();
+      isLoggedIn = true;
+      sessionStorage.setItem('biddaloy_logged_in', 'true');
+      checkAuthState();
+      showToast('নতুন প্রতিষ্ঠানের তথ্য সংরক্ষিত হয়েছে!');
+      renderMain();
+    }
+
+    function logoutApp() {
+      isLoggedIn = false;
+      sessionStorage.removeItem('biddaloy_logged_in');
+      checkAuthState();
+      showToast('Biddaloy Management লক / লগআউট করা হয়েছে।');
+    }
+
+    // ==========================================
+    // 3. UI & NAVIGATION STATE
+    // ==========================================
+    let currentTab = 'dashboard';
+    let selectedClass = (appData.classes && appData.classes[appData.classes.length - 1]?.id) || '5';
+    let selectedDate = getTodayISO();
+    let selectedMonth = getTodayISO().slice(0, 7);
+    let selectedExamTerm = 'বার্ষিক পরীক্ষা';
+    let attendanceSubTab = 'daily';
+    let resultSubTab = 'tabulation';
+    let selectedMarksheetStudentId = appData.students[0]?.id || '';
+    let docSubTab = 'admit';
+    let certType = 'pratyayan';
+    let certStudentId = appData.students[0]?.id || '';
+    let certReason = 'অভিভাবকের কর্মস্থল পরিবর্তনের কারণে';
+    let routineSubTab = 'routine';
+    let directorySubTab = 'students';
+    let directorySearchText = '';
+    let tempUploadedPhoto = '';
+
+    function handleModalPhotoChange(input) {
+      const file = input.files[0];
+      if (!file) return;
+      processImageFile(file, (base64) => {
+        tempUploadedPhoto = base64;
+        const preview = document.getElementById('modalPhotoPreview');
+        if (preview) {
+          preview.innerHTML = `<img src="${base64}" alt="Preview" class="w-full h-full object-cover" />`;
+        }
+      });
+    }
+
+    function clearModalPhoto() {
+      tempUploadedPhoto = '';
+      const preview = document.getElementById('modalPhotoPreview');
+      if (preview) {
+        preview.innerHTML = `<i class="fa-solid fa-user text-slate-400 text-2xl"></i>`;
+      }
+    }
+
+    const navItems = [
+      { id: 'dashboard', label: 'ড্যাশবোর্ড', icon: 'fa-house' },
+      { id: 'directory', label: 'শিক্ষার্থী ও শিক্ষক', icon: 'fa-users' },
+      { id: 'attendance', label: 'হাজিরা ও প্রতিবেদন', icon: 'fa-clipboard-user' },
+      { id: 'results', label: 'ফলাফল ও মার্কশিট', icon: 'fa-square-poll-vertical' },
+      { id: 'documents', label: 'প্রবেশপত্র, সিট প্ল্যান ও আইডি', icon: 'fa-id-card' },
+      { id: 'certificates', label: 'ছাড়পত্র ও সনদ', icon: 'fa-certificate' },
+      { id: 'routine', label: 'পরীক্ষার রুটিন ও ডিউটি', icon: 'fa-calendar-days' },
+      { id: 'settings', label: 'প্রতিষ্ঠান সেটআপ ও পাসওয়ার্ড', icon: 'fa-school-flag' }
+    ];
+
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      const bd = document.getElementById('sidebarBackdrop');
+      if (sb.classList.contains('-translate-x-full')) {
+        sb.classList.remove('-translate-x-full');
+        bd.classList.remove('hidden');
+      } else {
+        sb.classList.add('-translate-x-full');
+        bd.classList.add('hidden');
+      }
+    }
+
+    function closeSidebarMobile() {
+      if (window.innerWidth < 1024) {
+        document.getElementById('sidebar').classList.add('-translate-x-full');
+        document.getElementById('sidebarBackdrop').classList.add('hidden');
+      }
+    }
+
+    function navigateTo(tab) {
+      currentTab = tab;
+      closeSidebarMobile();
+      renderSidebar();
+      updateBottomNav();
+      renderMain();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderSidebar() {
+      const nav = document.getElementById('sidebarNav');
+      nav.innerHTML = navItems.map(item => {
+        const active = currentTab === item.id;
+        return `
+          <button onclick="navigateTo('${item.id}')" class="w-full text-left px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm transition ${active ? 'bg-gpsGreen text-white font-bold shadow-xs' : 'text-slate-700 hover:bg-gpsLight font-medium'}">
+            <i class="fa-solid ${item.icon} w-5 text-center ${active ? 'text-amber-300' : 'text-gpsGreen'}"></i>
+            <span>${item.label}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function updateBottomNav() {
+      ['dashboard', 'attendance', 'results', 'documents'].forEach(id => {
+        const el = document.getElementById(`mnav-${id}`);
+        if (!el) return;
+        el.className = currentTab === id
+          ? 'flex flex-col items-center p-1.5 rounded-xl text-gpsGreen bg-gpsLight font-bold text-[11px]'
+          : 'flex flex-col items-center p-1.5 rounded-xl text-slate-500 text-[11px]';
+      });
+    }
+
+    function updateHeaderSchoolInfo() {
+      const nameEl = document.getElementById('headerSchoolName');
+      const logoBox = document.getElementById('headerLogoBox');
+      if (nameEl) nameEl.textContent = appData.school.name;
+      if (logoBox) {
+        if (appData.school.logo) {
+          logoBox.innerHTML = `<img src="${appData.school.logo}" alt="Logo" class="w-full h-full object-cover" />`;
+        } else {
+          logoBox.innerHTML = `<i class="fa-solid fa-school"></i>`;
+        }
+      }
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      const box = document.getElementById('toastBox');
+      const msg = document.getElementById('toastMsg');
+      msg.textContent = message;
+      box.classList.remove('translate-y-24', 'opacity-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        box.classList.add('translate-y-24', 'opacity-0');
+      }, 2600);
+    }
+
+    function openModal(htmlContent) {
+      const overlay = document.getElementById('modalOverlay');
+      const box = document.getElementById('modalBox');
+      box.innerHTML = htmlContent;
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+    }
+
+    function closeModal() {
+      const overlay = document.getElementById('modalOverlay');
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+    }
+
+    // Reusable School Print Letterhead Header
+    function getPrintHeaderHTML(docTitle = '') {
+      return `
+        <div class="text-center border-b-2 border-slate-800 pb-3 mb-4">
+          <p class="text-xs font-semibold text-slate-600">${appData.school.instType || 'সরকারি প্রাথমিক বিদ্যালয়'} • শিক্ষাবর্ষ: ${toBn(appData.school.session)}</p>
+          <div class="flex items-center justify-center gap-3 mt-1">
+            ${appData.school.logo ? `<img src="${appData.school.logo}" alt="Logo" class="w-12 h-12 object-contain" />` : ''}
+            <div>
+              <h2 class="text-xl sm:text-2xl font-bold text-slate-900">${appData.school.name}</h2>
+              ${appData.school.nameEn ? `<p class="text-xs font-semibold text-slate-700">${appData.school.nameEn}</p>` : ''}
+              <p class="text-xs text-slate-700">${appData.school.address}</p>
+              <p class="text-[11px] text-slate-600">কোড/EMIS: ${toBn(appData.school.emis)} | স্থাপিত: ${toBn(appData.school.estd)} খ্রিঃ | মোবাইল: ${toBn(appData.school.phone)}</p>
+            </div>
+          </div>
+          ${docTitle ? `<div class="mt-2 inline-block px-4 py-1 rounded-full bg-slate-800 text-white text-xs sm:text-sm font-bold">${docTitle}</div>` : ''}
+        </div>
+      `;
+    }
+
+    function getPrintFooterCreditHTML() {
+      return `
+        <div class="hidden print:flex justify-between items-center text-[9px] text-slate-500 border-t border-slate-300 pt-1.5 mt-4">
+          <span>Prepared by: Biddaloy Management (বিদ্যালয় ম্যানেজমেন্ট সিস্টেম)</span>
+          <span>প্রিন্ট তারিখ: ${formatDateBn(getTodayISO())}</span>
+        </div>
+      `;
+    }
+
+    function getHeadSignatureBlockHTML() {
+      return `
+        <div class="text-center pt-1 px-4">
+          ${appData.school.signature ? `<img src="${appData.school.signature}" alt="Signature" class="h-10 object-contain mx-auto mb-1" />` : '<div class="h-8"></div>'}
+          <div class="border-t border-slate-600 pt-1">
+            <strong>${appData.school.headTeacher}</strong><br>
+            ${appData.school.headDesignation || 'প্রধান শিক্ষক'}<br>
+            ${appData.school.name}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // 4. GRADE & RESULT CALCULATION ENGINE
+    // ==========================================
+    function getGradeInfo(mark, fullMarks = 100) {
+      const pct = fullMarks > 0 ? ((Number(mark) || 0) / fullMarks) * 100 : 0;
+      if (pct >= 80) return { grade: 'A+', gpa: 5.0 };
+      if (pct >= 70) return { grade: 'A', gpa: 4.0 };
+      if (pct >= 60) return { grade: 'A-', gpa: 3.5 };
+      if (pct >= 50) return { grade: 'B', gpa: 3.0 };
+      if (pct >= 40) return { grade: 'C', gpa: 2.0 };
+      if (pct >= 33) return { grade: 'D', gpa: 1.0 };
+      return { grade: 'F', gpa: 0.0 };
+    }
+
+    function calculateClassResults(cls, term) {
+      const classStudents = appData.students
+        .filter(s => String(s.class) === String(cls))
+        .sort((a, b) => a.roll - b.roll);
+
+      const allSubs = getSubjectsList();
+      const activeSubjects = (String(cls) === '1' || String(cls) === '2') && allSubs.length >= 6
+        ? allSubs.filter(sub => ['bangla', 'english', 'math'].includes(sub.key))
+        : allSubs;
+
+      const termData = (appData.results[term] || {});
+      const maxTotalMarks = activeSubjects.reduce((acc, s) => acc + (Number(s.fullMarks) || 100), 0);
+
+      const computed = classStudents.map(st => {
+        const marks = termData[st.id] || {};
+        let total = 0;
+        let totalGpa = 0;
+        let failed = false;
+
+        activeSubjects.forEach(sub => {
+          const fm = Number(sub.fullMarks) || 100;
+          const val = Number(marks[sub.key]) || 0;
+          total += val;
+          const g = getGradeInfo(val, fm);
+          if (((val / fm) * 100) < 33) failed = true;
+          totalGpa += g.gpa;
+        });
+
+        const percentage = maxTotalMarks > 0 ? ((total / maxTotalMarks) * 100).toFixed(1) : '0.0';
+        const gpa = failed ? '0.00' : (activeSubjects.length ? (totalGpa / activeSubjects.length).toFixed(2) : '0.00');
+        let letter = 'F';
+        if (!failed) {
+          const gNum = parseFloat(gpa);
+          if (gNum === 5.0) letter = 'A+';
+          else if (gNum >= 4.0) letter = 'A';
+          else if (gNum >= 3.5) letter = 'A-';
+          else if (gNum >= 3.0) letter = 'B';
+          else if (gNum >= 2.0) letter = 'C';
+          else letter = 'D';
+        }
+
+        return {
+          student: st,
+          marks,
+          total,
+          maxTotalMarks,
+          percentage,
+          gpa,
+          letter,
+          failed,
+          merit: '-'
+        };
+      });
+
+      const passed = computed.filter(c => !c.failed).sort((a, b) => b.total - a.total);
+      passed.forEach((item, idx) => {
+        item.merit = toBn(idx + 1);
+      });
+
+      return { rows: computed, activeSubjects };
+    }
+
+    // ==========================================
+    // 5. MAIN VIEW ROUTER
+    // ==========================================
+    function renderMain() {
+      const container = document.getElementById('mainContent');
+      switch (currentTab) {
+        case 'dashboard': container.innerHTML = renderDashboard(); break;
+        case 'attendance': container.innerHTML = renderAttendance(); break;
+        case 'results': container.innerHTML = renderResults(); break;
+        case 'documents': container.innerHTML = renderDocuments(); break;
+        case 'certificates': container.innerHTML = renderCertificates(); break;
+        case 'routine': container.innerHTML = renderRoutine(); break;
+        case 'directory': container.innerHTML = renderDirectory(); break;
+        case 'settings': container.innerHTML = renderSettings(); break;
+      }
+    }
+
+    // ==========================================
+    // MODULE 1: DASHBOARD
+    // ==========================================
+    function renderDashboard() {
+      const totalStudents = appData.students.length;
+      const totalTeachers = appData.teachers.length;
+      const today = getTodayISO();
+      const todayAtt = appData.attendance[today] || {};
+      const presentCount = Object.values(todayAtt).filter(v => v === 'P').length;
+      const recordedCount = Object.keys(todayAtt).length;
+      const attPercent = recordedCount > 0 ? Math.round((presentCount / recordedCount) * 100) : 0;
+
+      const classCounts = (appData.classes || defaultClasses).map(c => ({
+        cls: c.id,
+        name: c.name,
+        count: appData.students.filter(s => String(s.class) === String(c.id)).length
+      }));
+
+      return `
+        <!-- School Profile Banner -->
+        <div class="bg-gradient-to-r from-gpsGreen to-emerald-800 rounded-3xl p-6 text-white shadow-md mb-6 relative overflow-hidden">
+          <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-2xl bg-white text-gpsGreen flex items-center justify-center text-3xl shadow-md overflow-hidden shrink-0">
+                ${appData.school.logo ? `<img src="${appData.school.logo}" class="w-full h-full object-cover" />` : '<i class="fa-solid fa-school"></i>'}
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-900 text-xs font-bold">${appData.school.instType || 'সরকারি প্রাথমিক বিদ্যালয়'}</span>
+                  <span class="text-xs text-emerald-200 font-semibold">Biddaloy Management</span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold mt-1">${appData.school.name}</h2>
+                <p class="text-xs sm:text-sm text-emerald-100">${appData.school.address} • কোড/EMIS: ${toBn(appData.school.emis)}</p>
+              </div>
+            </div>
+            <button onclick="navigateTo('settings')" class="self-start sm:self-center px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-xs font-semibold border border-white/25 transition shrink-0">
+              <i class="fa-solid fa-pen-to-square mr-1"></i> নাম, লোগো ও পাসওয়ার্ড পরিবর্তন
+            </button>
+          </div>
+        </div>
+
+        <!-- Overview Stats Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div onclick="navigateTo('directory')" class="cursor-pointer bg-white rounded-2xl p-4 border border-slate-200 hover:border-gpsGreen shadow-2xs transition">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-semibold text-slate-500">মোট শিক্ষার্থী</span>
+              <div class="w-9 h-9 rounded-xl bg-emerald-100 text-gpsGreen flex items-center justify-center"><i class="fa-solid fa-user-graduate"></i></div>
+            </div>
+            <p class="text-2xl sm:text-3xl font-bold text-slate-800">${toBn(totalStudents)} <span class="text-xs font-normal text-slate-500">জন</span></p>
+            <p class="text-[11px] text-gpsGreen mt-1">মোট ${toBn(classCounts.length)}টি শ্রেণিতে নিবন্ধিত</p>
+          </div>
+
+          <div onclick="navigateTo('directory'); directorySubTab='teachers'; renderMain();" class="cursor-pointer bg-white rounded-2xl p-4 border border-slate-200 hover:border-gpsGreen shadow-2xs transition">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-semibold text-slate-500">কর্মরত শিক্ষক</span>
+              <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center"><i class="fa-solid fa-chalkboard-user"></i></div>
+            </div>
+            <p class="text-2xl sm:text-3xl font-bold text-slate-800">${toBn(totalTeachers)} <span class="text-xs font-normal text-slate-500">জন</span></p>
+            <p class="text-[11px] text-blue-600 mt-1">প্রধান ও সহকারী শিক্ষকবৃন্দ</p>
+          </div>
+
+          <div onclick="navigateTo('attendance')" class="cursor-pointer bg-white rounded-2xl p-4 border border-slate-200 hover:border-gpsGreen shadow-2xs transition">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-semibold text-slate-500">আজকের উপস্থিতি</span>
+              <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center"><i class="fa-solid fa-clipboard-check"></i></div>
+            </div>
+            <p class="text-2xl sm:text-3xl font-bold text-slate-800">${toBn(attPercent)}%</p>
+            <p class="text-[11px] text-amber-700 mt-1">উপস্থিত: ${toBn(presentCount)} / ${toBn(recordedCount)} জন</p>
+          </div>
+
+          <div onclick="navigateTo('routine')" class="cursor-pointer bg-white rounded-2xl p-4 border border-slate-200 hover:border-gpsGreen shadow-2xs transition">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-semibold text-slate-500">আসন্ন পরীক্ষা</span>
+              <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center"><i class="fa-solid fa-calendar-check"></i></div>
+            </div>
+            <p class="text-lg sm:text-xl font-bold text-slate-800 mt-1">বার্ষিক পরীক্ষা</p>
+            <p class="text-[11px] text-rose-600 mt-1">শুরু: ${formatDateBn(appData.routine[0]?.date || '2026-12-01')}</p>
+          </div>
+        </div>
+
+        <!-- Quick Actions Grid -->
+        <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-bolt text-amber-500"></i> দ্রুত কাজ শুরু করুন (এক ক্লিকে)
+        </h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          <button onclick="navigateTo('attendance')" class="bg-white hover:bg-gpsLight border border-slate-200 hover:border-gpsGreen rounded-2xl p-4 text-center shadow-2xs transition flex flex-col items-center gap-2">
+            <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-gpsGreen flex items-center justify-center text-lg"><i class="fa-solid fa-clipboard-user"></i></div>
+            <span class="text-xs font-bold text-slate-800">দৈনিক হাজিরা</span>
+          </button>
+
+          <button onclick="navigateTo('results')" class="bg-white hover:bg-gpsLight border border-slate-200 hover:border-gpsGreen rounded-2xl p-4 text-center shadow-2xs transition flex flex-col items-center gap-2">
+            <div class="w-11 h-11 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center text-lg"><i class="fa-solid fa-square-poll-vertical"></i></div>
+            <span class="text-xs font-bold text-slate-800">ফলাফল শিট</span>
+          </button>
+
+          <button onclick="navigateTo('documents'); docSubTab='admit'; renderMain();" class="bg-white hover:bg-gpsLight border border-slate-200 hover:border-gpsGreen rounded-2xl p-4 text-center shadow-2xs transition flex flex-col items-center gap-2">
+            <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg"><i class="fa-solid fa-file-invoice"></i></div>
+            <span class="text-xs font-bold text-slate-800">প্রবেশপত্র তৈরি</span>
+          </button>
+
+          <button onclick="navigateTo('documents'); docSubTab='seatplan'; renderMain();" class="bg-white hover:bg-gpsLight border border-slate-200 hover:border-gpsGreen rounded-2xl p-4 text-center shadow-2xs transition flex flex-col items-center gap-2">
+            <div class="w-11 h-11 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-lg"><i class="fa-solid fa-chair"></i></div>
+            <span class="text-xs font-bold text-slate-800">সিট প্ল্যান</span>
+          </button>
+
+          <button onclick="navigateTo('documents'); docSubTab='idcard'; renderMain();" class="bg-white hover:bg-gpsLight border border-slate-200 hover:border-gpsGreen rounded-2xl p-4 text-center shadow-2xs transition flex flex-col items-center gap-2">
+            <div class="w-11 h-11 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center text-lg"><i class="fa-solid fa-id-card"></i></div>
+            <span class="text-xs font-bold text-slate-800">আইডি কার্ড</span>
+          </button>
+
+          <button onclick="navigateTo('certificates')" class="bg-white hover:bg-gpsLight border border-slate-200 hover:border-gpsGreen rounded-2xl p-4 text-center shadow-2xs transition flex flex-col items-center gap-2">
+            <div class="w-11 h-11 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center text-lg"><i class="fa-solid fa-certificate"></i></div>
+            <span class="text-xs font-bold text-slate-800">ছাড়পত্র ও সনদ</span>
+          </button>
+        </div>
+
+        <!-- Class-wise Student Summary -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-base font-bold text-slate-800">শ্রেণিভিত্তিক শিক্ষার্থী পরিসংখ্যান</h3>
+            <button onclick="navigateTo('directory')" class="text-xs font-bold text-gpsGreen hover:underline">নতুন শিক্ষার্থী যোগ করুন +</button>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            ${classCounts.map(c => `
+              <div onclick="selectedClass='${c.cls}'; navigateTo('directory');" class="cursor-pointer p-3.5 rounded-xl bg-slate-50 hover:bg-gpsLight border border-slate-200 text-center transition">
+                <p class="text-xs font-semibold text-slate-600">${c.name}</p>
+                <p class="text-xl font-bold text-gpsGreen mt-1">${toBn(c.count)} <span class="text-xs font-normal text-slate-500">জন</span></p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // MODULE 2: ATTENDANCE & MONTHLY REPORT
+    // ==========================================
+    function setStudentAttendance(studentId, status) {
+      if (!appData.attendance[selectedDate]) appData.attendance[selectedDate] = {};
+      appData.attendance[selectedDate][studentId] = status;
+      saveData();
+      renderMain();
+    }
+
+    function markAllPresent() {
+      if (!appData.attendance[selectedDate]) appData.attendance[selectedDate] = {};
+      const classStudents = appData.students.filter(s => String(s.class) === String(selectedClass));
+      classStudents.forEach(s => {
+        appData.attendance[selectedDate][s.id] = 'P';
+      });
+      saveData();
+      showToast(`${getClassName(selectedClass)}-এর সবাইকে উপস্থিত করা হয়েছে।`);
+      renderMain();
+    }
+
+    function renderAttendance() {
+      const classStudents = appData.students
+        .filter(s => String(s.class) === String(selectedClass))
+        .sort((a, b) => a.roll - b.roll);
+
+      if (attendanceSubTab === 'daily') {
+        const dayRecord = appData.attendance[selectedDate] || {};
+        const presentTotal = classStudents.filter(s => dayRecord[s.id] === 'P').length;
+        const absentTotal = classStudents.filter(s => dayRecord[s.id] === 'A').length;
+
+        return `
+          <div class="no-print flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div>
+              <h2 class="text-xl font-bold text-slate-800">দৈনিক হাজিরা ও মাসিক প্রতিবেদন</h2>
+              <p class="text-xs text-slate-500">শ্রেণি ও তারিখ নির্বাচন করে এক ক্লিকে হাজিরা নিন</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="attendanceSubTab='daily'; renderMain();" class="px-4 py-2 rounded-xl text-xs font-bold bg-gpsGreen text-white shadow-2xs">দৈনিক হাজিরা</button>
+              <button onclick="attendanceSubTab='monthly'; renderMain();" class="px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">মাসিক প্রতিবেদন</button>
+              <button onclick="window.print()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-white hover:bg-slate-700"><i class="fa-solid fa-print mr-1"></i> প্রিন্ট / PDF</button>
+            </div>
+          </div>
+
+          <div class="no-print bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div class="flex flex-wrap gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">শ্রেণি নির্বাচন</label>
+                <select onchange="selectedClass=this.value; renderMain();" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold bg-slate-50">
+                  ${Object.entries(getClassesMap()).map(([k, v]) => `<option value="${k}" ${String(selectedClass) === String(k) ? 'selected' : ''}>${v}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">তারিখ</label>
+                <input type="date" value="${selectedDate}" onchange="selectedDate=this.value; renderMain();" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold bg-slate-50" />
+              </div>
+            </div>
+            <button onclick="markAllPresent()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-gpsGreen text-white text-xs font-bold shadow-2xs transition">
+              <i class="fa-solid fa-check-double mr-1"></i> সবাইকে উপস্থিত করুন
+            </button>
+          </div>
+
+          <div class="print-container bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs">
+            <div class="hidden print:block">
+              ${getPrintHeaderHTML(`দৈনিক হাজিরা বিবরণী — ${getClassName(selectedClass)} (তারিখ: ${formatDateBn(selectedDate)})`)}
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+              <span class="font-bold text-gpsGreen text-sm">${getClassName(selectedClass)} • তারিখ: ${formatDateBn(selectedDate)}</span>
+              <div class="flex gap-3 text-xs font-bold">
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800">উপস্থিত: ${toBn(presentTotal)} জন</span>
+                <span class="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800">অনুপস্থিত: ${toBn(absentTotal)} জন</span>
+              </div>
+            </div>
+
+            ${classStudents.length === 0 ? `
+              <p class="text-center text-sm text-slate-500 py-8">এই শ্রেণিতে কোনো শিক্ষার্থী নিবন্ধিত নেই।</p>
+            ` : `
+              <div class="overflow-x-auto">
+                <table class="print-table w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-slate-100 text-slate-700 text-xs sm:text-sm">
+                      <th class="p-3 w-16">রোল</th>
+                      <th class="p-3">শিক্ষার্থীর নাম</th>
+                      <th class="p-3 hidden sm:table-cell">পিতার নাম</th>
+                      <th class="p-3 text-center">অবস্থা</th>
+                      <th class="no-print p-3 text-right">হাজিরা দিন</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-200 text-sm">
+                    ${classStudents.map(st => {
+                      const status = dayRecord[st.id] || '';
+                      return `
+                        <tr class="hover:bg-slate-50">
+                          <td class="p-3 font-bold text-slate-800">${toBn(st.roll)}</td>
+                          <td class="p-3 font-semibold text-slate-800">${st.name}</td>
+                          <td class="p-3 text-slate-600 hidden sm:table-cell">${st.father}</td>
+                          <td class="p-3 text-center">
+                            ${status === 'P' ? '<span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">উপস্থিত</span>' :
+                              status === 'A' ? '<span class="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-xs font-bold">অনুপস্থিত</span>' :
+                              '<span class="text-xs text-slate-400">বাকি</span>'}
+                          </td>
+                          <td class="no-print p-3 text-right">
+                            <div class="inline-flex gap-1.5">
+                              <button onclick="setStudentAttendance('${st.id}', 'P')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${status === 'P' ? 'bg-gpsGreen text-white shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-emerald-100'}">উপস্থিত</button>
+                              <button onclick="setStudentAttendance('${st.id}', 'A')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${status === 'A' ? 'bg-gpsRed text-white shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-rose-100'}">অনুপস্থিত</button>
+                            </div>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `}
+            ${getPrintFooterCreditHTML()}
+          </div>
+        `;
+      } else {
+        const monthDates = Object.keys(appData.attendance).filter(d => d.startsWith(selectedMonth));
+        const workingDays = monthDates.length;
+
+        return `
+          <div class="no-print flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div>
+              <h2 class="text-xl font-bold text-slate-800">মাসিক উপস্থিতি প্রতিবেদন</h2>
+              <p class="text-xs text-slate-500">মাসভিত্তিক মোট কার্যদিবস ও শিক্ষার্থীর উপস্থিতির হার</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="attendanceSubTab='daily'; renderMain();" class="px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">দৈনিক হাজিরা</button>
+              <button onclick="attendanceSubTab='monthly'; renderMain();" class="px-4 py-2 rounded-xl text-xs font-bold bg-gpsGreen text-white shadow-2xs">মাসিক প্রতিবেদন</button>
+              <button onclick="window.print()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-white hover:bg-slate-700"><i class="fa-solid fa-print mr-1"></i> প্রিন্ট / PDF</button>
+            </div>
+          </div>
+
+          <div class="no-print bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs mb-5 flex flex-wrap gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">শ্রেণি</label>
+              <select onchange="selectedClass=this.value; renderMain();" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold bg-slate-50">
+                ${Object.entries(getClassesMap()).map(([k, v]) => `<option value="${k}" ${String(selectedClass) === String(k) ? 'selected' : ''}>${v}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">মাস নির্বাচন</label>
+              <input type="month" value="${selectedMonth}" onchange="selectedMonth=this.value; renderMain();" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold bg-slate-50" />
+            </div>
+          </div>
+
+          <div class="print-container bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs">
+            ${getPrintHeaderHTML(`মাসিক উপস্থিতি প্রতিবেদন — ${getClassName(selectedClass)} (মাস: ${toBn(selectedMonth)})`)}
+            <p class="text-xs font-bold text-slate-700 mb-3">মোট রেকর্ডকৃত কার্যদিবস: ${toBn(workingDays)} দিন</p>
+
+            <div class="overflow-x-auto">
+              <table class="print-table w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="bg-slate-100 text-slate-800 text-xs">
+                    <th class="p-2.5">রোল</th>
+                    <th class="p-2.5">শিক্ষার্থীর নাম</th>
+                    <th class="p-2.5 text-center">মোট কার্যদিবস</th>
+                    <th class="p-2.5 text-center">উপস্থিত দিন</th>
+                    <th class="p-2.5 text-center">অনুপস্থিত দিন</th>
+                    <th class="p-2.5 text-center">উপস্থিতির হার (%)</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  ${classStudents.map(st => {
+                    let pCount = 0;
+                    let aCount = 0;
+                    monthDates.forEach(d => {
+                      if (appData.attendance[d]?.[st.id] === 'P') pCount++;
+                      if (appData.attendance[d]?.[st.id] === 'A') aCount++;
+                    });
+                    const pct = workingDays > 0 ? Math.round((pCount / workingDays) * 100) : 0;
+                    return `
+                      <tr>
+                        <td class="p-2.5 font-bold">${toBn(st.roll)}</td>
+                        <td class="p-2.5 font-semibold">${st.name}</td>
+                        <td class="p-2.5 text-center">${toBn(workingDays)}</td>
+                        <td class="p-2.5 text-center font-bold text-emerald-700">${toBn(pCount)}</td>
+                        <td class="p-2.5 text-center font-bold text-rose-600">${toBn(aCount)}</td>
+                        <td class="p-2.5 text-center font-bold">${toBn(pct)}%</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+            ${getPrintFooterCreditHTML()}
+          </div>
+        `;
+      }
+    }
+
+    // ==========================================
+    // MODULE 3: RESULTS & MARKSHEET
+    // ==========================================
+    function updateStudentMark(studentId, subKey, val, maxMark = 100) {
+      if (!appData.results[selectedExamTerm]) appData.results[selectedExamTerm] = {};
+      if (!appData.results[selectedExamTerm][studentId]) appData.results[selectedExamTerm][studentId] = {};
+      let num = parseInt(val, 10);
+      if (isNaN(num)) num = 0;
+      if (num > maxMark) num = maxMark;
+      if (num < 0) num = 0;
+      appData.results[selectedExamTerm][studentId][subKey] = num;
+      saveData();
+      renderMain();
+    }
+
+    function renderResults() {
+      const { rows, activeSubjects } = calculateClassResults(selectedClass, selectedExamTerm);
+
+      return `
+        <div class="no-print flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">ফলাফল শিট ও মার্কশিট</h2>
+            <p class="text-xs text-slate-500">নম্বর লিখলেই স্বয়ংক্রিয়ভাবে মোট নম্বর, শতকরা হার, GPA, গ্রেড ও মেধাক্রম তৈরি হবে</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="resultSubTab='tabulation'; renderMain();" class="px-3.5 py-2 rounded-xl text-xs font-bold ${resultSubTab === 'tabulation' ? 'bg-gpsGreen text-white' : 'bg-white border border-slate-200 text-slate-700'}">টেবুলেশন শিট</button>
+            <button onclick="resultSubTab='marksheet'; renderMain();" class="px-3.5 py-2 rounded-xl text-xs font-bold ${resultSubTab === 'marksheet' ? 'bg-gpsGreen text-white' : 'bg-white border border-slate-200 text-slate-700'}">ব্যক্তিগত মার্কশিট</button>
+            <button onclick="window.print()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-white hover:bg-slate-700"><i class="fa-solid fa-print mr-1"></i> প্রিন্ট / PDF</button>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="no-print bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs mb-5 flex flex-wrap gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">শ্রেণি</label>
+            <select onchange="selectedClass=this.value; selectedMarksheetStudentId=(appData.students.find(s=>String(s.class)===String(this.value))?.id || ''); renderMain();" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold bg-slate-50">
+              ${Object.entries(getClassesMap()).map(([k, v]) => `<option value="${k}" ${String(selectedClass) === String(k) ? 'selected' : ''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">পরীক্ষার নাম</label>
+            <select onchange="selectedExamTerm=this.value; renderMain();" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold bg-slate-50">
+              <option value="১ম সাময়িক পরীক্ষা" ${selectedExamTerm === '১ম সাময়িক পরীক্ষা' ? 'selected' : ''}>১ম সাময়িক পরীক্ষা</option>
+              <option value="২য় সাময়িক পরীক্ষা" ${selectedExamTerm === '২য় সাময়িক পরীক্ষা' ? 'selected' : ''}>২য় সাময়িক পরীক্ষা</option>
+              <option value="বার্ষিক পরীক্ষা" ${selectedExamTerm === 'বার্ষিক পরীক্ষা' ? 'selected' : ''}>বার্ষিক পরীক্ষা</option>
+            </select>
+          </div>
+          ${resultSubTab === 'marksheet' ? `
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">শিক্ষার্থী নির্বাচন</label>
+              <select onchange="selectedMarksheetStudentId=this.value; renderMain();" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold bg-slate-50">
+                ${rows.map(r => `<option value="${r.student.id}" ${selectedMarksheetStudentId === r.student.id ? 'selected' : ''}>রোল ${toBn(r.student.roll)} — ${r.student.name}</option>`).join('')}
+              </select>
+            </div>
+          ` : ''}
+        </div>
+
+        ${resultSubTab === 'tabulation' ? `
+          <div class="print-container bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs">
+            ${getPrintHeaderHTML(`ফলাফল টেবুলেশন শিট — ${selectedExamTerm} (${getClassName(selectedClass)})`)}
+            <div class="overflow-x-auto">
+              <table class="print-table w-full text-left border-collapse text-xs sm:text-sm">
+                <thead>
+                  <tr class="bg-slate-100 text-slate-800">
+                    <th class="p-2.5">রোল</th>
+                    <th class="p-2.5">শিক্ষার্থীর নাম</th>
+                    ${activeSubjects.map(s => `<th class="p-2.5 text-center">${s.name}<br><span class="text-[10px] font-normal text-slate-500">(${toBn(s.fullMarks)})</span></th>`).join('')}
+                    <th class="p-2.5 text-center">মোট</th>
+                    <th class="p-2.5 text-center">হার (%)</th>
+                    <th class="p-2.5 text-center">GPA</th>
+                    <th class="p-2.5 text-center">গ্রেড</th>
+                    <th class="p-2.5 text-center">মেধাক্রম</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  ${rows.map(r => `
+                    <tr>
+                      <td class="p-2.5 font-bold">${toBn(r.student.roll)}</td>
+                      <td class="p-2.5 font-semibold whitespace-nowrap">${r.student.name}</td>
+                      ${activeSubjects.map(sub => {
+                        const val = r.marks[sub.key] ?? '';
+                        return `
+                          <td class="p-1.5 text-center">
+                            <input type="number" min="0" max="${sub.fullMarks}" value="${val}" onchange="updateStudentMark('${r.student.id}', '${sub.key}', this.value, ${sub.fullMarks})" class="no-print w-14 px-1.5 py-1 text-center border border-slate-300 rounded-lg font-bold text-slate-800 focus:border-gpsGreen focus:outline-none" />
+                            <span class="hidden print:inline font-semibold">${toBn(val || 0)}</span>
+                          </td>
+                        `;
+                      }).join('')}
+                      <td class="p-2.5 text-center font-bold text-gpsGreen">${toBn(r.total)}</td>
+                      <td class="p-2.5 text-center font-semibold">${toBn(r.percentage)}%</td>
+                      <td class="p-2.5 text-center font-bold">${toBn(r.gpa)}</td>
+                      <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded-md font-bold text-xs ${r.failed ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}">${r.letter}</span></td>
+                      <td class="p-2.5 text-center font-bold text-amber-700">${r.merit}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            ${getPrintFooterCreditHTML()}
+          </div>
+        ` : (() => {
+          const item = rows.find(r => r.student.id === selectedMarksheetStudentId) || rows[0];
+          if (!item) return `<div class="bg-white p-8 rounded-2xl text-center text-slate-500">কোনো শিক্ষার্থী পাওয়া যায়নি।</div>`;
+          return `
+            <div class="print-container bg-white rounded-2xl p-6 sm:p-8 border-2 border-gpsGreen shadow-xs max-w-3xl mx-auto">
+              ${getPrintHeaderHTML(`একাডেমিক ট্রান্সক্রিপ্ট / নম্বরপত্র — ${selectedExamTerm}`)}
+              <div class="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-5">
+                <div class="w-16 h-16 rounded-xl bg-white border border-slate-300 flex items-center justify-center overflow-hidden shrink-0">
+                  ${item.student.photo ? `<img src="${item.student.photo}" alt="Student" class="w-full h-full object-cover" />` : '<i class="fa-solid fa-user text-slate-400 text-2xl"></i>'}
+                </div>
+                <div class="flex-1 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs sm:text-sm w-full">
+                  <p><strong>শিক্ষার্থীর নাম:</strong> ${item.student.name}</p>
+                  <p><strong>শ্রেণি:</strong> ${getClassName(item.student.class)}</p>
+                  <p><strong>পিতার নাম:</strong> ${item.student.father}</p>
+                  <p><strong>রোল নম্বর:</strong> ${toBn(item.student.roll)}</p>
+                  <p><strong>মাতার নাম:</strong> ${item.student.mother}</p>
+                  <p><strong>মেধাক্রম:</strong> ${item.merit}</p>
+                </div>
+              </div>
+
+              <table class="print-table w-full text-left border-collapse text-sm mb-6">
+                <thead>
+                  <tr class="bg-slate-100">
+                    <th class="p-3">ক্রমিক</th>
+                    <th class="p-3">বিষয়ের নাম</th>
+                    <th class="p-3 text-center">পূর্ণমান</th>
+                    <th class="p-3 text-center">প্রাপ্ত নম্বর</th>
+                    <th class="p-3 text-center">লেটার গ্রেড</th>
+                    <th class="p-3 text-center">গ্রেড পয়েন্ট</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  ${activeSubjects.map((sub, idx) => {
+                    const m = Number(item.marks[sub.key]) || 0;
+                    const g = getGradeInfo(m, sub.fullMarks);
+                    return `
+                      <tr>
+                        <td class="p-2.5">${toBn(idx + 1)}</td>
+                        <td class="p-2.5 font-semibold">${sub.name}</td>
+                        <td class="p-2.5 text-center">${toBn(sub.fullMarks)}</td>
+                        <td class="p-2.5 text-center font-bold">${toBn(m)}</td>
+                        <td class="p-2.5 text-center font-bold">${g.grade}</td>
+                        <td class="p-2.5 text-center">${toBn(g.gpa.toFixed(2))}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                  <tr class="bg-emerald-50 font-bold">
+                    <td colspan="2" class="p-3 text-right">সর্বমোট নম্বর ও চূড়ান্ত ফলাফল:</td>
+                    <td class="p-3 text-center">${toBn(item.maxTotalMarks)}</td>
+                    <td class="p-3 text-center text-gpsGreen">${toBn(item.total)} (${toBn(item.percentage)}%)</td>
+                    <td class="p-3 text-center">${item.letter}</td>
+                    <td class="p-3 text-center">GPA: ${toBn(item.gpa)}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="flex justify-between items-end pt-10 text-xs text-slate-700">
+                <div class="text-center border-t border-slate-500 pt-1 px-4">শ্রেণি শিক্ষকের স্বাক্ষর</div>
+                <div class="text-center border-t border-slate-500 pt-1 px-4">অভিভাবকের স্বাক্ষর</div>
+                ${getHeadSignatureBlockHTML()}
+              </div>
+              ${getPrintFooterCreditHTML()}
+            </div>
+          `;
+        })()}
+      `;
+    }
+
+    // ==========================================
+    // MODULE 4: ADMIT CARD, SEAT PLAN & ID CARD
+    // ==========================================
+    function renderDocuments() {
+      const classStudents = appData.students
+        .filter(s => String(s.class) === String(selectedClass))
+        .sort((a, b) => a.roll - b.roll);
+
+      return `
+        <div class="no-print flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">প্রবেশপত্র, সিট প্ল্যান ও আইডি কার্ড</h2>
+            <p class="text-xs text-slate-500">A4 কাগজে সরাসরি প্রিন্ট বা PDF সেভ করার উপযোগী ডিজাইন</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="docSubTab='admit'; renderMain();" class="px-3.5 py-2 rounded-xl text-xs font-bold ${docSubTab === 'admit' ? 'bg-gpsGreen text-white' : 'bg-white border border-slate-200 text-slate-700'}">প্রবেশপত্র</button>
+            <button onclick="docSubTab='seatplan'; renderMain();" class="px-3.5 py-2 rounded-xl text-xs font-bold ${docSubTab === 'seatplan' ? 'bg-gpsGreen text-white' : 'bg-white border border-slate-200 text-slate-700'}">সিট প্ল্যান</button>
+            <button onclick="docSubTab='idcard'; renderMain();" class="px-3.5 py-2 rounded-xl text-xs font-bold ${docSubTab === 'idcard' ? 'bg-gpsGreen text-white' : 'bg-white border border-slate-200 text-slate-700'}">আইডি কার্ড</button>
+            <button onclick="window.print()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-white hover:bg-slate-700"><i class="fa-solid fa-print mr-1"></i> প্রিন্ট / PDF</button>
+          </div>
+        </div>
+
+        ${docSubTab !== 'seatplan' ? `
+          <div class="no-print bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs mb-5 flex flex-wrap gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">শ্রেণি নির্বাচন</label>
+              <select onchange="selectedClass=this.value; renderMain();" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold bg-slate-50">
+                ${Object.entries(getClassesMap()).map(([k, v]) => `<option value="${k}" ${String(selectedClass) === String(k) ? 'selected' : ''}>${v}</option>`).join('')}
+              </select>
+            </div>
+            ${docSubTab === 'admit' ? `
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">পরীক্ষার নাম</label>
+                <select onchange="selectedExamTerm=this.value; renderMain();" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold bg-slate-50">
+                  <option value="১ম সাময়িক পরীক্ষা" ${selectedExamTerm === '১ম সাময়িক পরীক্ষা' ? 'selected' : ''}>১ম সাময়িক পরীক্ষা</option>
+                  <option value="২য় সাময়িক পরীক্ষা" ${selectedExamTerm === '২য় সাময়িক পরীক্ষা' ? 'selected' : ''}>২য় সাময়িক পরীক্ষা</option>
+                  <option value="বার্ষিক পরীক্ষা" ${selectedExamTerm === 'বার্ষিক পরীক্ষা' ? 'selected' : ''}>বার্ষিক পরীক্ষা</option>
+                </select>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+
+        ${docSubTab === 'admit' ? `
+          <div class="print-container grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${classStudents.map(st => `
+              <div class="print-card-avoid-break bg-white border-2 border-gpsGreen rounded-2xl p-4 shadow-2xs relative">
+                <div class="flex items-center gap-3 border-b border-slate-300 pb-2.5 mb-3">
+                  <div class="w-11 h-11 rounded-xl bg-gpsLight text-gpsGreen flex items-center justify-center text-xl shrink-0 overflow-hidden border border-emerald-200">
+                    ${appData.school.logo ? `<img src="${appData.school.logo}" class="w-full h-full object-contain" />` : '<i class="fa-solid fa-school"></i>'}
+                  </div>
+                  <div class="flex-1 text-center">
+                    <h4 class="font-bold text-sm sm:text-base text-slate-900 leading-tight">${appData.school.name}</h4>
+                    <p class="text-[10px] text-slate-600">${appData.school.address}</p>
+                    <span class="inline-block mt-1 px-3 py-0.5 rounded-full bg-gpsGreen text-white text-[11px] font-bold">প্রবেশপত্র — ${selectedExamTerm} (${toBn(appData.school.session)})</span>
+                  </div>
+                  <div class="w-12 h-14 rounded-lg bg-slate-100 border border-slate-300 flex items-center justify-center overflow-hidden shrink-0">
+                    ${st.photo ? `<img src="${st.photo}" alt="Photo" class="w-full h-full object-cover" />` : '<i class="fa-solid fa-user text-slate-400"></i>'}
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-y-1.5 text-xs text-slate-800 mb-6">
+                  <p><strong>নাম:</strong> ${st.name}</p>
+                  <p><strong>শ্রেণি:</strong> ${getClassName(st.class)}</p>
+                  <p><strong>পিতা:</strong> ${st.father}</p>
+                  <p><strong>রোল নং:</strong> <span class="font-bold text-sm text-gpsGreen">${toBn(st.roll)}</span></p>
+                  <p class="col-span-2"><strong>মাতা:</strong> ${st.mother}</p>
+                </div>
+
+                <div class="flex justify-between items-end pt-3 text-[11px] text-slate-600">
+                  <span>* পরীক্ষা শুরুর ১৫ মিনিট পূর্বে আসন গ্রহণ করতে হবে।</span>
+                  <div class="text-center shrink-0">
+                    ${appData.school.signature ? `<img src="${appData.school.signature}" class="h-6 object-contain mx-auto" />` : ''}
+                    <div class="border-t border-slate-600 pt-0.5 px-2 font-bold text-slate-800">${appData.school.headDesignation || 'প্রধান শিক্ষক'}</div>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          ${getPrintFooterCreditHTML()}
+        ` : docSubTab === 'idcard' ? `
+          <div class="print-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${classStudents.map(st => `
+              <div class="print-card-avoid-break bg-white border-2 border-gpsGreen rounded-2xl overflow-hidden shadow-2xs flex flex-col justify-between">
+                <div class="bg-gpsGreen text-white p-3 text-center">
+                  <div class="w-10 h-10 rounded-full bg-white text-gpsGreen flex items-center justify-center mx-auto mb-1 text-lg overflow-hidden">
+                    ${appData.school.logo ? `<img src="${appData.school.logo}" class="w-full h-full object-contain" />` : '<i class="fa-solid fa-school"></i>'}
+                  </div>
+                  <h4 class="font-bold text-xs sm:text-sm leading-tight">${appData.school.name}</h4>
+                  <p class="text-[10px] text-emerald-100 mt-0.5">শিক্ষার্থী পরিচয়পত্র (ID Card)</p>
+                </div>
+
+                <div class="p-3.5 text-center flex-1">
+                  <div class="w-16 h-16 rounded-xl bg-slate-100 border-2 border-emerald-200 mx-auto mb-2 flex items-center justify-center text-slate-400 text-2xl overflow-hidden">
+                    ${st.photo ? `<img src="${st.photo}" alt="Student" class="w-full h-full object-cover" />` : '<i class="fa-solid fa-user"></i>'}
+                  </div>
+                  <h5 class="font-bold text-sm text-slate-900">${st.name}</h5>
+                  <span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 text-gpsGreen text-[11px] font-bold mt-0.5">${getClassName(st.class)} • রোল: ${toBn(st.roll)}</span>
+
+                  <div class="text-left text-[11px] text-slate-700 space-y-1 mt-3 pt-2 border-t border-slate-100">
+                    <p><strong>পিতা:</strong> ${st.father}</p>
+                    <p><strong>মাতা:</strong> ${st.mother}</p>
+                    <p><strong>রক্তের গ্রুপ:</strong> <span class="text-rose-600 font-bold">${st.blood || 'N/A'}</span> | <strong>মোবাইল:</strong> ${toBn(st.phone)}</p>
+                  </div>
+                </div>
+
+                <div class="bg-slate-50 px-3 py-2 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-600">
+                  <span>শিক্ষাবর্ষ: ${toBn(appData.school.session)}</span>
+                  <span class="font-bold text-slate-800">${appData.school.headDesignation || 'প্রধান শিক্ষক'}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          ${getPrintFooterCreditHTML()}
+        ` : `
+          <!-- Automatic Seat Plan View -->
+          <div class="print-container bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs">
+            ${getPrintHeaderHTML(`পরীক্ষার আসন বিন্যাস (Seat Plan) — ${selectedExamTerm}`)}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              ${[
+                { room: 'কক্ষ নং - ০১', classes: ['1', '2'] },
+                { room: 'কক্ষ নং - ০২', classes: ['3', '4'] },
+                { room: 'কক্ষ নং - ০৩', classes: ['5'] }
+              ].map(rm => {
+                const rmStudents = appData.students
+                  .filter(s => rm.classes.includes(String(s.class)))
+                  .sort((a, b) => String(a.class).localeCompare(String(b.class)) || a.roll - b.roll);
+
+                return `
+                  <div class="print-card-avoid-break border-2 border-slate-700 rounded-xl overflow-hidden">
+                    <div class="bg-slate-800 text-white p-2.5 text-center font-bold text-sm">
+                      ${rm.room} (${rm.classes.map(c => getClassName(c)).join(' ও ')})
+                    </div>
+                    <div class="p-3 space-y-2 text-xs">
+                      ${rmStudents.length === 0 ? '<p class="text-slate-400 text-center py-4">কোনো শিক্ষার্থী নেই</p>' :
+                        rmStudents.map((st, idx) => `
+                          <div class="p-2 rounded-lg bg-slate-50 border border-slate-300 flex items-center justify-between">
+                            <span class="font-bold text-gpsGreen">বেঞ্চ ${toBn(Math.floor(idx / 2) + 1)} (${idx % 2 === 0 ? 'বাম' : 'ডান'})</span>
+                            <span class="font-semibold text-slate-800">${getClassName(st.class)} — রোল: <strong>${toBn(st.roll)}</strong></span>
+                          </div>
+                        `).join('')}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            ${getPrintFooterCreditHTML()}
+          </div>
+        `}
+      `;
+    }
+
+    // ==========================================
+    // MODULE 5: CERTIFICATES GENERATOR
+    // ==========================================
+    function renderCertificates() {
+      const st = appData.students.find(s => s.id === certStudentId) || appData.students[0];
+      const titles = {
+        pratyayan: 'প্রত্যয়নপত্র (Testimonial)',
+        proshongsha: 'প্রশংসাপত্র (Character Certificate)',
+        tc: 'বিদ্যালয় পরিত্যাগের ছাড়পত্র (Transfer Certificate - TC)'
+      };
+
+      return `
+        <div class="no-print flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">বিভিন্ন সনদ ও ছাড়পত্র তৈরি</h2>
+            <p class="text-xs text-slate-500">শিক্ষার্থী নির্বাচন করলেই আনুষ্ঠানিক বাংলা সনদ তৈরি হয়ে যাবে</p>
+          </div>
+          <button onclick="window.print()" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gpsGreen hover:bg-gpsDark text-white shadow-xs"><i class="fa-solid fa-print mr-1.5"></i> সনদ প্রিন্ট / PDF</button>
+        </div>
+
+        <div class="no-print bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">সনদের ধরন</label>
+            <select onchange="certType=this.value; renderMain();" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold bg-slate-50">
+              <option value="pratyayan" ${certType === 'pratyayan' ? 'selected' : ''}>প্রত্যয়নপত্র</option>
+              <option value="proshongsha" ${certType === 'proshongsha' ? 'selected' : ''}>প্রশংসাপত্র</option>
+              <option value="tc" ${certType === 'tc' ? 'selected' : ''}>ছাড়পত্র (TC)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">শিক্ষার্থী নির্বাচন</label>
+            <select onchange="certStudentId=this.value; renderMain();" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold bg-slate-50">
+              ${appData.students.map(s => `<option value="${s.id}" ${certStudentId === s.id ? 'selected' : ''}>${getClassName(s.class)} (রোল ${toBn(s.roll)}) — ${s.name}</option>`).join('')}
+            </select>
+          </div>
+          ${certType === 'tc' ? `
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">ছাড়পত্র গ্রহণের কারণ</label>
+              <input type="text" value="${certReason}" oninput="certReason=this.value; document.getElementById('certReasonPreview').textContent=this.value;" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-slate-50" />
+            </div>
+          ` : ''}
+        </div>
+
+        ${!st ? `<p class="text-center text-slate-500">কোনো শিক্ষার্থী নেই।</p>` : `
+          <div class="print-container certificate-frame rounded-2xl p-6 sm:p-10 max-w-3xl mx-auto shadow-sm">
+            ${getPrintHeaderHTML(titles[certType])}
+
+            <div class="flex justify-between text-xs sm:text-sm text-slate-700 mb-8">
+              <span>স্মারক নং: বিম্যা/${toBn(appData.school.session)}/${toBn(st.roll)}</span>
+              <span>তারিখ: ${formatDateBn(getTodayISO())}</span>
+            </div>
+
+            <div class="text-sm sm:text-base text-slate-900 leading-loose text-justify space-y-4">
+              ${certType === 'pratyayan' ? `
+                <p>
+                  এই মর্মে প্রত্যয়ন করা যাচ্ছে যে, <strong>${st.name}</strong>, পিতা: <strong>${st.father}</strong>, মাতা: <strong>${st.mother}</strong>, অত্র <strong>${appData.school.name}</strong>-এর <strong>${getClassName(st.class)}</strong>-এর একজন নিয়মিত অধ্যয়নরত শিক্ষার্থী। প্রতিষ্ঠানের ভর্তি রেজিস্টার অনুযায়ী তার শ্রেণি রোল নম্বর <strong>${toBn(st.roll)}</strong> এবং জন্ম তারিখ <strong>${formatDateBn(st.dob)}</strong>।
+                </p>
+                <p>
+                  আমার জানামতে সে একজন সুশৃঙ্খল, পরিশ্রমী ও উত্তম চরিত্রের অধিকারী। তার নৈতিক চরিত্র ভালো এবং সে রাষ্ট্রবিরোধী কোনো কর্মকাণ্ডে জড়িত নয়।
+                </p>
+                <p>আমি তার জীবনের সর্বাঙ্গীণ উন্নতি ও উজ্জ্বল ভবিষ্যৎ কামনা করি।</p>
+              ` : certType === 'proshongsha' ? `
+                <p>
+                  অত্যন্ত আনন্দের সাথে প্রশংসা করা যাচ্ছে যে, <strong>${st.name}</strong>, পিতা: <strong>${st.father}</strong>, মাতা: <strong>${st.mother}</strong>, অত্র <strong>${appData.school.name}</strong>-এ অধ্যয়নকালে অত্যন্ত কৃতিত্ব ও সুনামের সাথে <strong>${getClassName(st.class)}</strong> (রোল নম্বর: <strong>${toBn(st.roll)}</strong>) পর্যন্ত উত্তীর্ণ হয়েছে।
+                </p>
+                <p>
+                  প্রতিষ্ঠানে অধ্যয়নকালীন সময়ে তার আচরণ, নিয়মানুবর্তিতা এবং সহশিক্ষা কার্যক্রমে অংশগ্রহণ ছিল অত্যন্ত প্রশংসনীয়। তার জন্ম তারিখ <strong>${formatDateBn(st.dob)}</strong>।
+                </p>
+                <p>আমি তার ভবিষ্যৎ জীবনের উত্তরোত্তর সাফল্য ও মঙ্গল কামনা করি।</p>
+              ` : `
+                <p>
+                  এই মর্মে ছাড়পত্র প্রদান করা যাচ্ছে যে, <strong>${st.name}</strong>, পিতা: <strong>${st.father}</strong>, মাতা: <strong>${st.mother}</strong>, অত্র <strong>${appData.school.name}</strong>-এর <strong>${getClassName(st.class)}</strong> (রোল নম্বর: <strong>${toBn(st.roll)}</strong>)-এর একজন নিয়মিত শিক্ষার্থী ছিল। তার জন্ম তারিখ <strong>${formatDateBn(st.dob)}</strong>।
+                </p>
+                <p>
+                  অভিভাবকের আবেদনের প্রেক্ষিতে এবং <strong>"<span id="certReasonPreview">${certReason}</span>"</strong>-এর কারণে আজ <strong>${formatDateBn(getTodayISO())}</strong> তারিখে তাকে অত্র প্রতিষ্ঠান পরিত্যাগের ছাড়পত্র প্রদান করা হলো। প্রতিষ্ঠানের সকল পাওনা পরিশোধিত আছে।
+                </p>
+                <p>সে অন্য যেকোনো প্রতিষ্ঠানে ভর্তির যোগ্য। আমি তার মঙ্গল কামনা করি।</p>
+              `}
+            </div>
+
+            <div class="flex justify-between items-end mt-16 pt-6 text-xs sm:text-sm text-slate-800">
+              <div class="text-center border-t border-slate-600 pt-1.5 px-4">সহকারী শিক্ষকের স্বাক্ষর</div>
+              ${getHeadSignatureBlockHTML()}
+            </div>
+            ${getPrintFooterCreditHTML()}
+          </div>
+        `}
+      `;
+    }
+
+    // ==========================================
+    // MODULE 6: EXAM ROUTINE & INVIGILATOR DUTY
+    // ==========================================
+    function openAddRoutineModal() {
+      openModal(`
+        <h3 class="text-lg font-bold text-gpsGreen mb-4">নতুন পরীক্ষার রুটিন যোগ করুন</h3>
+        <form onsubmit="saveNewRoutine(event)" class="space-y-3 text-sm">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold mb-1">তারিখ</label>
+              <input type="date" name="date" required class="w-full px-3 py-2 border rounded-xl" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">বার</label>
+              <input type="text" name="day" placeholder="যেমন: রবিবার" required class="w-full px-3 py-2 border rounded-xl" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">সময়</label>
+            <input type="text" name="time" value="সকাল ১০:০০ - ১২:৩০" required class="w-full px-3 py-2 border rounded-xl" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold mb-1">শ্রেণি</label>
+              <input type="text" name="className" placeholder="যেমন: সকল শ্রেণি / ৫ম শ্রেণি" required class="w-full px-3 py-2 border rounded-xl" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">বিষয়</label>
+              <input type="text" name="subject" placeholder="যেমন: বাংলা" required class="w-full px-3 py-2 border rounded-xl" />
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 pt-3">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-100 font-semibold">বাতিল</button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-gpsGreen text-white font-bold">সংরক্ষণ করুন</button>
+          </div>
+        </form>
+      `);
+    }
+
+    function saveNewRoutine(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      appData.routine.push({
+        id: 'r' + Date.now(),
+        date: fd.get('date'),
+        day: fd.get('day'),
+        time: fd.get('time'),
+        className: fd.get('className'),
+        subject: fd.get('subject')
+      });
+      saveData();
+      closeModal();
+      showToast('রুটিনে নতুন তারিখ যুক্ত হয়েছে।');
+      renderMain();
+    }
+
+    function deleteRoutineItem(id) {
+      appData.routine = appData.routine.filter(r => r.id !== id);
+      saveData();
+      renderMain();
+    }
+
+    function openAddDutyModal() {
+      openModal(`
+        <h3 class="text-lg font-bold text-gpsGreen mb-4">কক্ষ পরিদর্শকের দায়িত্ব বণ্টন</h3>
+        <form onsubmit="saveNewDuty(event)" class="space-y-3 text-sm">
+          <div>
+            <label class="block text-xs font-bold mb-1">তারিখ</label>
+            <input type="date" name="date" value="${appData.routine[0]?.date || getTodayISO()}" required class="w-full px-3 py-2 border rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">কক্ষ নম্বর ও শ্রেণি</label>
+            <input type="text" name="room" placeholder="যেমন: কক্ষ নং - ০১ (১ম ও ২য় শ্রেণি)" required class="w-full px-3 py-2 border rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">দায়িত্বপ্রাপ্ত শিক্ষক</label>
+            <select name="teacher" class="w-full px-3 py-2 border rounded-xl">
+              ${appData.teachers.map(t => `<option value="${t.name}">${t.name} (${t.designation})</option>`).join('')}
+            </select>
+          </div>
+          <div class="flex justify-end gap-2 pt-3">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-100 font-semibold">বাতিল</button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-gpsGreen text-white font-bold">যুক্ত করুন</button>
+          </div>
+        </form>
+      `);
+    }
+
+    function saveNewDuty(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      appData.dutyRoster.push({
+        id: 'd' + Date.now(),
+        date: fd.get('date'),
+        room: fd.get('room'),
+        teacher: fd.get('teacher')
+      });
+      saveData();
+      closeModal();
+      showToast('কক্ষ পরিদর্শকের তালিকা হালনাগাদ হয়েছে।');
+      renderMain();
+    }
+
+    function deleteDutyItem(id) {
+      appData.dutyRoster = appData.dutyRoster.filter(d => d.id !== id);
+      saveData();
+      renderMain();
+    }
+
+    function renderRoutine() {
+      return `
+        <div class="no-print flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">পরীক্ষার রুটিন ও কক্ষ পরিদর্শকের তালিকা</h2>
+            <p class="text-xs text-slate-500">পরীক্ষার সময়সূচি ও শিক্ষকদের কক্ষ বণ্টন তৈরি ও প্রিন্ট করুন</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="routineSubTab='routine'; renderMain();" class="px-3.5 py-2 rounded-xl text-xs font-bold ${routineSubTab === 'routine' ? 'bg-gpsGreen text-white' : 'bg-white border border-slate-200 text-slate-700'}">পরীক্ষার রুটিন</button>
+            <button onclick="routineSubTab='duty'; renderMain();" class="px-3.5 py-2 rounded-xl text-xs font-bold ${routineSubTab === 'duty' ? 'bg-gpsGreen text-white' : 'bg-white border border-slate-200 text-slate-700'}">কক্ষ পরিদর্শক তালিকা</button>
+            <button onclick="window.print()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-white hover:bg-slate-700"><i class="fa-solid fa-print mr-1"></i> প্রিন্ট / PDF</button>
+          </div>
+        </div>
+
+        ${routineSubTab === 'routine' ? `
+          <div class="no-print mb-4 flex justify-end">
+            <button onclick="openAddRoutineModal()" class="px-4 py-2 rounded-xl bg-gpsGreen text-white text-xs font-bold shadow-2xs">+ নতুন বিষয়/তারিখ যোগ করুন</button>
+          </div>
+          <div class="print-container bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs">
+            ${getPrintHeaderHTML(`পরীক্ষার সময়সূচি (রুটিন) — ${selectedExamTerm} (${toBn(appData.school.session)})`)}
+            <div class="overflow-x-auto">
+              <table class="print-table w-full text-left border-collapse text-xs sm:text-sm">
+                <thead>
+                  <tr class="bg-slate-100">
+                    <th class="p-3">তারিখ</th>
+                    <th class="p-3">বার</th>
+                    <th class="p-3">সময়</th>
+                    <th class="p-3">শ্রেণি</th>
+                    <th class="p-3">বিষয়</th>
+                    <th class="no-print p-3 text-right">মুছুন</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  ${appData.routine.map(r => `
+                    <tr>
+                      <td class="p-3 font-bold">${formatDateBn(r.date)}</td>
+                      <td class="p-3">${r.day}</td>
+                      <td class="p-3 text-xs">${r.time}</td>
+                      <td class="p-3 font-semibold">${r.className || 'সকল শ্রেণি'}</td>
+                      <td class="p-3 font-bold text-gpsGreen">${r.subject || r.c5 || '—'}</td>
+                      <td class="no-print p-3 text-right">
+                        <button onclick="deleteRoutineItem('${r.id}')" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            ${getPrintFooterCreditHTML()}
+          </div>
+        ` : `
+          <div class="no-print mb-4 flex justify-end">
+            <button onclick="openAddDutyModal()" class="px-4 py-2 rounded-xl bg-gpsGreen text-white text-xs font-bold shadow-2xs">+ পরিদর্শক দায়িত্ব যোগ করুন</button>
+          </div>
+          <div class="print-container bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs">
+            ${getPrintHeaderHTML(`কক্ষ পরিদর্শকের দায়িত্ব বণ্টন তালিকা — ${selectedExamTerm}`)}
+            <table class="print-table w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-slate-100">
+                  <th class="p-3">তারিখ</th>
+                  <th class="p-3">পরীক্ষার কক্ষ ও শ্রেণি</th>
+                  <th class="p-3">দায়িত্বপ্রাপ্ত শিক্ষকের নাম</th>
+                  <th class="p-3 text-center">স্বাক্ষর</th>
+                  <th class="no-print p-3 text-right">মুছুন</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200">
+                ${appData.dutyRoster.map(d => `
+                  <tr>
+                    <td class="p-3 font-bold">${formatDateBn(d.date)}</td>
+                    <td class="p-3">${d.room}</td>
+                    <td class="p-3 font-semibold text-gpsGreen">${d.teacher}</td>
+                    <td class="p-3 text-center text-slate-400">................</td>
+                    <td class="no-print p-3 text-right">
+                      <button onclick="deleteDutyItem('${d.id}')" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            ${getPrintFooterCreditHTML()}
+          </div>
+        `}
+      `;
+    }
+
+    // ==========================================
+    // MODULE 7: STUDENTS & TEACHERS DIRECTORY
+    // ==========================================
+    function openStudentModal(editId = null) {
+      const st = editId ? appData.students.find(s => s.id === editId) : null;
+      tempUploadedPhoto = st?.photo || '';
+      openModal(`
+        <h3 class="text-lg font-bold text-gpsGreen mb-4">${st ? 'শিক্ষার্থীর তথ্য ও ছবি সংশোধন' : 'নতুন শিক্ষার্থী নিবন্ধন (নাম ও ছবি)'}</h3>
+        <form onsubmit="saveStudentForm(event, '${editId || ''}')" class="space-y-3 text-sm">
+          <!-- Photo Upload & Live Preview -->
+          <div class="flex items-center gap-4 p-3 rounded-2xl bg-gpsLight border border-emerald-200">
+            <div id="modalPhotoPreview" class="w-16 h-16 rounded-2xl bg-white border border-slate-300 flex items-center justify-center overflow-hidden shrink-0">
+              ${tempUploadedPhoto ? `<img src="${tempUploadedPhoto}" alt="Preview" class="w-full h-full object-cover" />` : '<i class="fa-solid fa-user text-slate-400 text-2xl"></i>'}
+            </div>
+            <div class="flex-1 min-w-0">
+              <label class="block text-xs font-bold text-gpsGreen mb-1">শিক্ষার্থীর ছবি যোগ করুন (গ্যালারি/ক্যামেরা)</label>
+              <input type="file" accept="image/*" onchange="handleModalPhotoChange(this)" class="w-full text-xs text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-gpsGreen file:text-white" />
+              ${tempUploadedPhoto ? `<button type="button" onclick="clearModalPhoto()" class="mt-1 text-[11px] text-rose-600 font-semibold hover:underline">ছবি মুছুন</button>` : ''}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold mb-1">শ্রেণি</label>
+              <select name="class" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">
+                ${Object.entries(getClassesMap()).map(([k, v]) => `<option value="${k}" ${String(st ? st.class : selectedClass) === String(k) ? 'selected' : ''}>${v}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">রোল নম্বর</label>
+              <input type="number" name="roll" value="${st ? st.roll : ''}" placeholder="যেমন: 1" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white" />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold mb-1">শিক্ষার্থীর নাম (বাংলায়)</label>
+              <input type="text" name="name" value="${st ? st.name : ''}" placeholder="যেমন: তানভীর আহমেদ" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">শিক্ষার্থীর নাম (ইংরেজিতে)</label>
+              <input type="text" name="nameEn" value="${st?.nameEn || ''}" placeholder="e.g. Tanvir Ahmed" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold mb-1">পিতার নাম</label>
+              <input type="text" name="father" value="${st ? st.father : ''}" placeholder="পিতার নাম লিখুন" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">মাতার নাম</label>
+              <input type="text" name="mother" value="${st ? st.mother : ''}" placeholder="মাতার নাম লিখুন" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white" />
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-xs font-bold mb-1">লিঙ্গ</label>
+              <select name="gender" class="w-full px-2.5 py-2 border border-slate-300 rounded-xl bg-white">
+                <option value="ছাত্র" ${st?.gender === 'ছাত্র' ? 'selected' : ''}>ছাত্র</option>
+                <option value="ছাত্রী" ${st?.gender === 'ছাত্রী' ? 'selected' : ''}>ছাত্রী</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">রক্তের গ্রুপ</label>
+              <input type="text" name="blood" value="${st ? st.blood : 'O+'}" placeholder="O+" class="w-full px-2.5 py-2 border border-slate-300 rounded-xl bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">জন্ম তারিখ</label>
+              <input type="date" name="dob" value="${st ? st.dob : '2016-01-01'}" class="w-full px-2 py-2 border border-slate-300 rounded-xl bg-white text-xs" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">অভিভাবকের মোবাইল নম্বর</label>
+            <input type="text" name="phone" value="${st ? st.phone : ''}" placeholder="017XXXXXXXX" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white" />
+          </div>
+          <div class="flex justify-end gap-2 pt-3">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-100 font-semibold">বাতিল</button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-gpsGreen text-white font-bold">সংরক্ষণ করুন</button>
+          </div>
+        </form>
+      `);
+    }
+
+    function saveStudentForm(e, editId) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const obj = {
+        id: editId || 's' + Date.now(),
+        class: fd.get('class'),
+        roll: parseInt(fd.get('roll'), 10),
+        name: fd.get('name').trim(),
+        nameEn: (fd.get('nameEn') || '').trim(),
+        father: fd.get('father').trim(),
+        mother: fd.get('mother').trim(),
+        gender: fd.get('gender'),
+        blood: fd.get('blood').trim(),
+        dob: fd.get('dob'),
+        phone: fd.get('phone').trim(),
+        photo: tempUploadedPhoto
+      };
+
+      if (editId) {
+        const idx = appData.students.findIndex(s => s.id === editId);
+        if (idx !== -1) appData.students[idx] = obj;
+      } else {
+        appData.students.push(obj);
+      }
+      selectedClass = obj.class;
+      saveData();
+      closeModal();
+      showToast(editId ? 'শিক্ষার্থীর তথ্য ও ছবি হালনাগাদ হয়েছে।' : 'নতুন শিক্ষার্থী যুক্ত হয়েছে।');
+      renderMain();
+    }
+
+    function deleteStudent(id) {
+      appData.students = appData.students.filter(s => s.id !== id);
+      saveData();
+      showToast('শিক্ষার্থীর তথ্য মুছে ফেলা হয়েছে।');
+      renderMain();
+    }
+
+    function openTeacherModal(editId = null) {
+      const tc = editId ? appData.teachers.find(t => t.id === editId) : null;
+      tempUploadedPhoto = tc?.photo || '';
+      openModal(`
+        <h3 class="text-lg font-bold text-gpsGreen mb-4">${tc ? 'শিক্ষকের তথ্য ও ছবি সংশোধন' : 'নতুন শিক্ষক যুক্ত করুন (নাম ও ছবি)'}</h3>
+        <form onsubmit="saveTeacherForm(event, '${editId || ''}')" class="space-y-3 text-sm">
+          <div class="flex items-center gap-4 p-3 rounded-2xl bg-gpsLight border border-emerald-200">
+            <div id="modalPhotoPreview" class="w-16 h-16 rounded-2xl bg-white border border-slate-300 flex items-center justify-center overflow-hidden shrink-0">
+              ${tempUploadedPhoto ? `<img src="${tempUploadedPhoto}" alt="Preview" class="w-full h-full object-cover" />` : '<i class="fa-solid fa-user-tie text-slate-400 text-2xl"></i>'}
+            </div>
+            <div class="flex-1 min-w-0">
+              <label class="block text-xs font-bold text-gpsGreen mb-1">শিক্ষকের ছবি যোগ করুন</label>
+              <input type="file" accept="image/*" onchange="handleModalPhotoChange(this)" class="w-full text-xs text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-gpsGreen file:text-white" />
+              ${tempUploadedPhoto ? `<button type="button" onclick="clearModalPhoto()" class="mt-1 text-[11px] text-rose-600 font-semibold hover:underline">ছবি মুছুন</button>` : ''}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold mb-1">শিক্ষকের নাম (বাংলায়)</label>
+              <input type="text" name="name" value="${tc ? tc.name : ''}" placeholder="যেমন: মোঃ নাজিমুল হক" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">শিক্ষকের নাম (ইংরেজিতে)</label>
+              <input type="text" name="nameEn" value="${tc?.nameEn || ''}" placeholder="e.g. Md. Nazimul Haque" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold mb-1">পদবি</label>
+              <select name="designation" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">
+                <option value="প্রধান শিক্ষক" ${tc?.designation === 'প্রধান শিক্ষক' ? 'selected' : ''}>প্রধান শিক্ষক</option>
+                <option value="সহকারী শিক্ষক" ${tc?.designation === 'সহকারী শিক্ষক' ? 'selected' : ''}>সহকারী শিক্ষক</option>
+                <option value="অধ্যক্ষ / সুপার" ${tc?.designation === 'অধ্যক্ষ / সুপার' ? 'selected' : ''}>অধ্যক্ষ / সুপার</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">মোবাইল নম্বর</label>
+              <input type="text" name="phone" value="${tc ? tc.phone : ''}" placeholder="017XXXXXXXX" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">শিক্ষাগত যোগ্যতা ও প্রশিক্ষণ</label>
+            <input type="text" name="qualification" value="${tc ? tc.qualification : ''}" placeholder="যেমন: এম.এ, ডিপিএড" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">যোগদানের তারিখ</label>
+            <input type="date" name="joining" value="${tc ? tc.joining : getTodayISO()}" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white" />
+          </div>
+          <div class="flex justify-end gap-2 pt-3">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-100 font-semibold">বাতিল</button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-gpsGreen text-white font-bold">সংরক্ষণ করুন</button>
+          </div>
+        </form>
+      `);
+    }
+
+    function saveTeacherForm(e, editId) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const obj = {
+        id: editId || 't' + Date.now(),
+        name: fd.get('name').trim(),
+        nameEn: (fd.get('nameEn') || '').trim(),
+        designation: fd.get('designation'),
+        phone: fd.get('phone').trim(),
+        qualification: fd.get('qualification').trim(),
+        joining: fd.get('joining'),
+        photo: tempUploadedPhoto
+      };
+      if (editId) {
+        const idx = appData.teachers.findIndex(t => t.id === editId);
+        if (idx !== -1) appData.teachers[idx] = obj;
+      } else {
+        appData.teachers.push(obj);
+      }
+      saveData();
+      closeModal();
+      showToast('শিক্ষকের তথ্য ও ছবি সংরক্ষিত হয়েছে।');
+      renderMain();
+    }
+
+    function deleteTeacher(id) {
+      appData.teachers = appData.teachers.filter(t => t.id !== id);
+      saveData();
+      showToast('শিক্ষকের তথ্য মুছে ফেলা হয়েছে।');
+      renderMain();
+    }
+
+    function renderDirectory() {
+      const q = directorySearchText.trim().toLowerCase();
+      const classStudents = appData.students
+        .filter(s => String(s.class) === String(selectedClass))
+        .filter(s => !q || s.name.toLowerCase().includes(q) || (s.nameEn || '').toLowerCase().includes(q) || String(s.roll).includes(q) || toBn(s.roll).includes(q))
+        .sort((a, b) => a.roll - b.roll);
+
+      const filteredTeachers = appData.teachers
+        .filter(t => !q || t.name.toLowerCase().includes(q) || (t.nameEn || '').toLowerCase().includes(q) || t.designation.toLowerCase().includes(q));
+
+      return `
+        <div class="no-print flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">শিক্ষার্থী ও শিক্ষক তালিকা</h2>
+            <p class="text-xs text-slate-500">তথ্য ও ছবি যোগ, সংশোধন, অনুসন্ধান এবং প্রিন্ট/PDF বের করুন</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="directorySubTab='students'; renderMain();" class="px-4 py-2 rounded-xl text-xs font-bold ${directorySubTab === 'students' ? 'bg-gpsGreen text-white' : 'bg-white border border-slate-200 text-slate-700'}">শিক্ষার্থী তালিকা</button>
+            <button onclick="directorySubTab='teachers'; renderMain();" class="px-4 py-2 rounded-xl text-xs font-bold ${directorySubTab === 'teachers' ? 'bg-gpsGreen text-white' : 'bg-white border border-slate-200 text-slate-700'}">শিক্ষক তালিকা</button>
+            <button onclick="window.print()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-white hover:bg-slate-700"><i class="fa-solid fa-print mr-1"></i> প্রিন্ট / PDF</button>
+          </div>
+        </div>
+
+        ${directorySubTab === 'students' ? `
+          <div class="no-print bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap gap-1.5">
+              ${Object.entries(getClassesMap()).map(([k, v]) => `
+                <button onclick="selectedClass='${k}'; renderMain();" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${String(selectedClass) === String(k) ? 'bg-gpsGreen text-white' : 'bg-slate-100 text-slate-700 hover:bg-emerald-50'}">${v}</button>
+              `).join('')}
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <input type="text" value="${directorySearchText}" oninput="directorySearchText=this.value; renderMain();" placeholder="নাম বা রোল খুঁজুন..." class="flex-1 sm:w-48 px-3 py-1.5 text-xs border border-slate-300 rounded-xl bg-slate-50" />
+              <button onclick="openStudentModal()" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold shadow-2xs whitespace-nowrap">+ নতুন শিক্ষার্থী ও ছবি</button>
+            </div>
+          </div>
+
+          <div class="print-container bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs">
+            ${getPrintHeaderHTML(`শিক্ষার্থী নিবন্ধন তালিকা — ${getClassName(selectedClass)} (${toBn(appData.school.session)})`)}
+            <div class="overflow-x-auto">
+              <table class="print-table w-full text-left border-collapse text-xs sm:text-sm">
+                <thead>
+                  <tr class="bg-slate-100">
+                    <th class="p-2.5">রোল</th>
+                    <th class="p-2.5">ছবি ও শিক্ষার্থীর নাম</th>
+                    <th class="p-2.5">পিতা ও মাতার নাম</th>
+                    <th class="p-2.5">জন্ম তারিখ</th>
+                    <th class="p-2.5">মোবাইল</th>
+                    <th class="no-print p-2.5 text-right">অ্যাকশন</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  ${classStudents.map(st => `
+                    <tr>
+                      <td class="p-2.5 font-bold">${toBn(st.roll)}</td>
+                      <td class="p-2.5">
+                        <div class="flex items-center gap-2.5">
+                          <div class="w-9 h-9 rounded-lg bg-slate-100 border border-slate-300 flex items-center justify-center overflow-hidden shrink-0">
+                            ${st.photo ? `<img src="${st.photo}" alt="Photo" class="w-full h-full object-cover" />` : '<i class="fa-solid fa-user text-slate-400 text-xs"></i>'}
+                          </div>
+                          <div>
+                            <span class="font-semibold text-slate-900 block">${st.name}</span>
+                            ${st.nameEn ? `<span class="text-[11px] text-slate-600 block">${st.nameEn}</span>` : ''}
+                            <span class="text-[11px] text-slate-500">(${st.gender}, ${st.blood})</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="p-2.5 text-xs">পিতা: ${st.father}<br>মাতা: ${st.mother}</td>
+                      <td class="p-2.5 text-xs">${formatDateBn(st.dob)}</td>
+                      <td class="p-2.5 text-xs font-semibold">${toBn(st.phone)}</td>
+                      <td class="no-print p-2.5 text-right whitespace-nowrap">
+                        <button onclick="openStudentModal('${st.id}')" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg" title="নাম ও ছবি এডিট"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteStudent('${st.id}')" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg" title="মুছুন"><i class="fa-solid fa-trash"></i></button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            ${getPrintFooterCreditHTML()}
+          </div>
+        ` : `
+          <div class="no-print mb-4 flex flex-wrap items-center justify-between gap-2">
+            <input type="text" value="${directorySearchText}" oninput="directorySearchText=this.value; renderMain();" placeholder="শিক্ষকের নাম খুঁজুন..." class="w-full sm:w-64 px-3.5 py-2 text-xs border border-slate-300 rounded-xl bg-white" />
+            <button onclick="openTeacherModal()" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold shadow-2xs">+ নতুন শিক্ষক ও ছবি যোগ করুন</button>
+          </div>
+          <div class="print-container bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs">
+            ${getPrintHeaderHTML(`কর্মরত শিক্ষকবৃন্দের তালিকা — ${toBn(appData.school.session)}`)}
+            <div class="overflow-x-auto">
+              <table class="print-table w-full text-left border-collapse text-xs sm:text-sm">
+                <thead>
+                  <tr class="bg-slate-100">
+                    <th class="p-3">ক্রমিক</th>
+                    <th class="p-3">ছবি ও শিক্ষকের নাম</th>
+                    <th class="p-3">পদবি</th>
+                    <th class="p-3">যোগ্যতা ও প্রশিক্ষণ</th>
+                    <th class="p-3">যোগদানের তারিখ</th>
+                    <th class="p-3">মোবাইল</th>
+                    <th class="no-print p-3 text-right">অ্যাকশন</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  ${filteredTeachers.map((tc, idx) => `
+                    <tr>
+                      <td class="p-3 font-bold">${toBn(idx + 1)}</td>
+                      <td class="p-3">
+                        <div class="flex items-center gap-2.5">
+                          <div class="w-9 h-9 rounded-lg bg-slate-100 border border-slate-300 flex items-center justify-center overflow-hidden shrink-0">
+                            ${tc.photo ? `<img src="${tc.photo}" alt="Photo" class="w-full h-full object-cover" />` : '<i class="fa-solid fa-user-tie text-slate-400 text-xs"></i>'}
+                          </div>
+                          <div>
+                            <span class="font-bold text-slate-900 block">${tc.name}</span>
+                            ${tc.nameEn ? `<span class="text-[11px] text-slate-500">${tc.nameEn}</span>` : ''}
+                          </div>
+                        </div>
+                      </td>
+                      <td class="p-3">${tc.designation}</td>
+                      <td class="p-3 text-xs">${tc.qualification}</td>
+                      <td class="p-3 text-xs">${formatDateBn(tc.joining)}</td>
+                      <td class="p-3 font-semibold">${toBn(tc.phone)}</td>
+                      <td class="no-print p-3 text-right whitespace-nowrap">
+                        <button onclick="openTeacherModal('${tc.id}')" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg" title="নাম ও ছবি এডিট"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteTeacher('${tc.id}')" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg" title="মুছুন"><i class="fa-solid fa-trash"></i></button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            ${getPrintFooterCreditHTML()}
+          </div>
+        `}
+      `;
+    }
+
+    // ==========================================
+    // MODULE 8: SCHOOL SETTINGS, CLASSES/SUBJECTS & SECURITY
+    // ==========================================
+    function saveSchoolSettings(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      appData.school.instType = fd.get('instType');
+      appData.school.name = fd.get('name').trim();
+      appData.school.nameEn = fd.get('nameEn').trim();
+      appData.school.address = fd.get('address').trim();
+      appData.school.emis = fd.get('emis').trim();
+      appData.school.estd = fd.get('estd').trim();
+      appData.school.headTeacher = fd.get('headTeacher').trim();
+      appData.school.headDesignation = fd.get('headDesignation').trim();
+      appData.school.phone = fd.get('phone').trim();
+      appData.school.session = fd.get('session').trim();
+      saveData();
+      showToast('প্রতিষ্ঠানের নাম ও তথ্য সফলভাবে সংরক্ষিত হয়েছে!');
+      renderMain();
+    }
+
+    function handleLogoUpload(input) {
+      const file = input.files[0];
+      if (!file) return;
+      processImageFile(file, (base64) => {
+        appData.school.logo = base64;
+        saveData();
+        showToast('প্রতিষ্ঠানের লোগো আপডেট হয়েছে!');
+        renderMain();
+      });
+    }
+
+    function handleSignatureUpload(input) {
+      const file = input.files[0];
+      if (!file) return;
+      processImageFile(file, (base64) => {
+        appData.school.signature = base64;
+        saveData();
+        showToast('প্রধান শিক্ষকের স্বাক্ষর যুক্ত হয়েছে!');
+        renderMain();
+      });
+    }
+
+    function saveCredentialsForm(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const newUser = fd.get('username').trim();
+      const newPass = fd.get('newPassword').trim();
+      const confirmPass = fd.get('confirmPassword').trim();
+
+      if (!newUser || !newPass) {
+        showToast('ইউজারনেম ও পাসওয়ার্ড খালি রাখা যাবে না।');
+        return;
+      }
+      if (newPass !== confirmPass) {
+        showToast('নতুন পাসওয়ার্ড ও কনফার্ম পাসওয়ার্ড মিলছে না!');
+        return;
+      }
+      appData.auth.username = newUser;
+      appData.auth.password = newPass;
+      saveData();
+      e.target.reset();
+      showToast('লগইন ইউজারনেম ও পাসওয়ার্ড পরিবর্তিত হয়েছে!');
+      renderMain();
+    }
+
+    function addCustomClass() {
+      const inp = document.getElementById('newClassInput');
+      const val = inp?.value.trim();
+      if (!val) return;
+      const newId = 'c_' + Date.now();
+      appData.classes.push({ id: newId, name: val });
+      saveData();
+      showToast(`"${val}" শ্রেণি তালিকাভুক্ত হয়েছে।`);
+      renderMain();
+    }
+
+    function removeCustomClass(id) {
+      if (appData.classes.length <= 1) {
+        showToast('অন্তত একটি শ্রেণি থাকতে হবে।');
+        return;
+      }
+      appData.classes = appData.classes.filter(c => String(c.id) !== String(id));
+      if (String(selectedClass) === String(id)) selectedClass = appData.classes[0].id;
+      saveData();
+      renderMain();
+    }
+
+    function addCustomSubject() {
+      const inp = document.getElementById('newSubjectInput');
+      const fmInp = document.getElementById('newSubjectMarksInput');
+      const val = inp?.value.trim();
+      const fm = parseInt(fmInp?.value, 10) || 100;
+      if (!val) return;
+      const key = 'sub_' + Date.now();
+      appData.subjects.push({ key, name: val, fullMarks: fm });
+      saveData();
+      showToast(`"${val}" (${toBn(fm)}) বিষয় যুক্ত হয়েছে।`);
+      renderMain();
+    }
+
+    function removeCustomSubject(key) {
+      if (appData.subjects.length <= 1) {
+        showToast('অন্তত একটি বিষয় থাকতে হবে।');
+        return;
+      }
+      appData.subjects = appData.subjects.filter(s => s.key !== key);
+      saveData();
+      renderMain();
+    }
+
+    function clearAllDemoData() {
+      appData.students = [];
+      appData.teachers = [];
+      appData.attendance = {};
+      appData.results = {};
+      saveData();
+      showToast('সব ডেমো তথ্য মুছে ফেলা হয়েছে! এখন আপনার প্রতিষ্ঠানের তথ্য যোগ করুন।');
+      renderMain();
+    }
+
+    function exportBackupJSON() {
+      const dataStr = JSON.stringify(appData, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Biddaloy_Management_Backup_${getTodayISO()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('ব্যাকআপ ফাইল ডাউনলোড হয়েছে।');
+    }
+
+    function importBackupJSON(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const parsed = JSON.parse(evt.target.result);
+          if (parsed && parsed.school && Array.isArray(parsed.students)) {
+            appData = parsed;
+            saveData();
+            showToast('ব্যাকআপ থেকে সকল তথ্য পুনরুদ্ধার হয়েছে!');
+            renderMain();
+          } else {
+            showToast('ভুল ব্যাকআপ ফাইল!');
+          }
+        } catch (err) {
+          showToast('ফাইলটি পড়া সম্ভব হয়নি।');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function renderSettings() {
+      return `
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">প্রতিষ্ঠান সেটআপ — Biddaloy Management</h2>
+            <p class="text-xs text-slate-500">যেকোনো বিদ্যালয়, কিন্ডারগার্টেন বা মাদ্রাসার জন্য নাম, লোগো, শ্রেণি, বিষয় এবং লগইন পাসওয়ার্ড পরিবর্তন করুন</p>
+          </div>
+
+          <!-- 1. School Identity, Logo & Signature -->
+          <form onsubmit="saveSchoolSettings(event)" class="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-4 text-sm">
+            <h3 class="text-base font-bold text-gpsGreen border-b border-slate-100 pb-2">১. প্রতিষ্ঠানের নাম, লোগো ও প্রধান শিক্ষকের স্বাক্ষর</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-3 border-b border-slate-100">
+              <!-- Logo Upload -->
+              <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="w-16 h-16 rounded-xl bg-white border border-slate-300 flex items-center justify-center text-2xl text-gpsGreen overflow-hidden shrink-0">
+                  ${appData.school.logo ? `<img src="${appData.school.logo}" class="w-full h-full object-contain" />` : '<i class="fa-solid fa-school"></i>'}
+                </div>
+                <div class="min-w-0">
+                  <label class="block text-xs font-bold text-slate-800 mb-1">প্রতিষ্ঠানের লোগো</label>
+                  <input type="file" accept="image/*" onchange="handleLogoUpload(this)" class="w-full text-xs text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-gpsGreen file:text-white" />
+                </div>
+              </div>
+
+              <!-- Signature Upload -->
+              <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="w-24 h-16 rounded-xl bg-white border border-slate-300 flex items-center justify-center text-xs text-slate-400 overflow-hidden shrink-0">
+                  ${appData.school.signature ? `<img src="${appData.school.signature}" class="w-full h-full object-contain" />` : 'স্বাক্ষর নেই'}
+                </div>
+                <div class="min-w-0">
+                  <label class="block text-xs font-bold text-slate-800 mb-1">প্রধান শিক্ষকের স্বাক্ষর (ছবি)</label>
+                  <input type="file" accept="image/*" onchange="handleSignatureUpload(this)" class="w-full text-xs text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-800 file:text-white" />
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">প্রতিষ্ঠানের ধরন</label>
+                <select name="instType" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl bg-white font-semibold">
+                  <option value="সরকারি প্রাথমিক বিদ্যালয়" ${appData.school.instType === 'সরকারি প্রাথমিক বিদ্যালয়' ? 'selected' : ''}>সরকারি প্রাথমিক বিদ্যালয়</option>
+                  <option value="কিন্ডারগার্টেন" ${appData.school.instType === 'কিন্ডারগার্টেন' ? 'selected' : ''}>কিন্ডারগার্টেন</option>
+                  <option value="মাদ্রাসা" ${appData.school.instType === 'মাদ্রাসা' ? 'selected' : ''}>মাদ্রাসা</option>
+                  <option value="উচ্চ বিদ্যালয়" ${appData.school.instType === 'উচ্চ বিদ্যালয়' ? 'selected' : ''}>উচ্চ বিদ্যালয়</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">প্রতিষ্ঠানের নাম (বাংলায়)</label>
+                <input type="text" name="name" value="${appData.school.name}" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl font-semibold" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">প্রতিষ্ঠানের নাম (ইংরেজিতে - ঐচ্ছিক)</label>
+                <input type="text" name="nameEn" value="${appData.school.nameEn || ''}" placeholder="School Name in English" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">ঠিকানা (গ্রাম/ডাকঘর, উপজেলা, জেলা)</label>
+                <input type="text" name="address" value="${appData.school.address}" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">EMIS / প্রতিষ্ঠান কোড</label>
+                <input type="text" name="emis" value="${appData.school.emis}" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">স্থাপিত সাল</label>
+                <input type="text" name="estd" value="${appData.school.estd}" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">চলতি শিক্ষাবর্ষ</label>
+                <input type="text" name="session" value="${appData.school.session}" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">প্রতিষ্ঠান প্রধানের নাম</label>
+                <input type="text" name="headTeacher" value="${appData.school.headTeacher}" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">প্রধানের পদবি</label>
+                <input type="text" name="headDesignation" value="${appData.school.headDesignation || 'প্রধান শিক্ষক'}" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">প্রতিষ্ঠানের মোবাইল নম্বর</label>
+                <input type="text" name="phone" value="${appData.school.phone}" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl" />
+              </div>
+            </div>
+
+            <div class="pt-2">
+              <button type="submit" class="px-6 py-2.5 rounded-xl bg-gpsGreen hover:bg-gpsDark text-white font-bold shadow-xs transition">
+                <i class="fa-solid fa-floppy-disk mr-1.5"></i> প্রতিষ্ঠানের তথ্য সংরক্ষণ করুন
+              </button>
+            </div>
+          </form>
+
+          <!-- 2. Login Username & Password Change -->
+          <form onsubmit="saveCredentialsForm(event)" class="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-4 text-sm">
+            <h3 class="text-base font-bold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
+              <i class="fa-solid fa-shield-halved text-gpsGreen"></i> ২. লগইন ইউজারনেম ও পাসওয়ার্ড পরিবর্তন
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">লগইন ইউজারনেম</label>
+                <input type="text" name="username" value="${appData.auth.username}" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl font-semibold" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">নতুন পাসওয়ার্ড</label>
+                <input type="password" name="newPassword" placeholder="নতুন পাসওয়ার্ড লিখুন" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">পাসওয়ার্ড নিশ্চিত করুন</label>
+                <input type="password" name="confirmPassword" placeholder="আবার পাসওয়ার্ড লিখুন" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl" />
+              </div>
+            </div>
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition">
+              <i class="fa-solid fa-key mr-1.5"></i> ইউজারনেম ও পাসওয়ার্ড আপডেট করুন
+            </button>
+          </form>
+
+          <!-- 3. Custom Classes & Subjects Manager -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs">
+              <h3 class="text-sm font-bold text-gpsGreen mb-2">৩. শ্রেণি তালিকা কাস্টমাইজ করুন (প্লে/নার্সারি/১ম-১০ম)</h3>
+              <div class="flex gap-2 mb-3">
+                <input type="text" id="newClassInput" placeholder="যেমন: প্লে / নার্সারি / ৬ষ্ঠ শ্রেণি" class="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-xl" />
+                <button type="button" onclick="addCustomClass()" class="px-3 py-1.5 rounded-xl bg-gpsGreen text-white text-xs font-bold">+ যোগ</button>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                ${(appData.classes || defaultClasses).map(c => `
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gpsLight border border-emerald-200 text-xs font-semibold text-gpsGreen">
+                    ${c.name}
+                    <button type="button" onclick="removeCustomClass('${c.id}')" class="text-rose-600 hover:text-rose-800 font-bold">×</button>
+                  </span>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs">
+              <h3 class="text-sm font-bold text-gpsGreen mb-2">৪. বিষয় ও পূর্ণমান কাস্টমাইজ করুন</h3>
+              <div class="flex gap-2 mb-3">
+                <input type="text" id="newSubjectInput" placeholder="বিষয়ের নাম (যেমন: আরবি)" class="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-xl" />
+                <input type="number" id="newSubjectMarksInput" value="100" min="10" max="200" placeholder="পূর্ণমান" class="w-20 px-2.5 py-1.5 text-xs border border-slate-300 rounded-xl text-center" />
+                <button type="button" onclick="addCustomSubject()" class="px-3 py-1.5 rounded-xl bg-gpsGreen text-white text-xs font-bold">+ যোগ</button>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                ${getSubjectsList().map(s => `
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-900">
+                    ${s.name} (${toBn(s.fullMarks)})
+                    <button type="button" onclick="removeCustomSubject('${s.key}')" class="text-rose-600 hover:text-rose-800 font-bold">×</button>
+                  </span>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Offline Data Share, Backup & Clear Demo Data -->
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs">
+            <h3 class="text-base font-bold text-slate-800 mb-1">৫. ডাটা ব্যাকআপ ও ডেমো তথ্য রিসেট</h3>
+            <p class="text-xs text-slate-500 mb-4">অন্য শিক্ষকের ফোনে তথ্য স্থানান্তর করতে ব্যাকআপ ডাউনলোড করুন, অথবা নতুন প্রতিষ্ঠানের জন্য সব ডেমো তথ্য খালি করুন।</p>
+            <div class="flex flex-wrap gap-3">
+              <button type="button" onclick="exportBackupJSON()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center gap-2">
+                <i class="fa-solid fa-download"></i> ব্যাকআপ ডাউনলোড (Export)
+              </button>
+              <label class="cursor-pointer px-4 py-2.5 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-gpsGreen text-xs font-bold flex items-center gap-2">
+                <i class="fa-solid fa-upload"></i> ব্যাকআপ লোড (Import)
+                <input type="file" accept=".json" onchange="importBackupJSON(this)" class="hidden" />
+              </label>
+              <button type="button" onclick="clearAllDemoData()" class="px-4 py-2.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2">
+                <i class="fa-solid fa-trash-can"></i> সব ডেমো তথ্য মুছে খালি করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Initialize App
+    window.addEventListener('DOMContentLoaded', () => {
+      checkAuthState();
+      updateHeaderSchoolInfo();
+      renderSidebar();
+      updateBottomNav();
+      renderMain();
+    });
+  </script>
+</body>
+</html>
